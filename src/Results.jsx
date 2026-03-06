@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { colors, cardStyle, btnSecondary, btnPrimary, fmt } from './theme';
 import { StatCard, AllocRow, ComponentTable } from './components';
 import { generatePDF } from './pdfReport';
 
-export function ResultsDashboard({ results: r, formData, unitCostDetail, photos = [], onBack }) {
+export function ResultsDashboard({ results: r, formData, unitCostDetail, depSchedule, photos = [], onBack }) {
+  const [showFullSchedule, setShowFullSchedule] = useState(false);
   const address = [formData.address, formData.city, formData.state, formData.zip].filter(Boolean).join(', ');
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const propertyName = formData.propertyName || address || 'Subject Property';
@@ -68,7 +70,7 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, photos 
             </div>
           </div>
           <div className="csp-results-header-btns" style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => generatePDF(r, formData)} style={{ ...btnPrimary, fontSize: 13, padding: '10px 18px', background: colors.blue }}>{"\uD83D\uDCC4"} Download PDF</button>
+            <button onClick={() => generatePDF(r, formData, unitCostDetail, depSchedule)} style={{ ...btnPrimary, fontSize: 13, padding: '10px 18px', background: colors.blue }}>{"\uD83D\uDCC4"} Download PDF</button>
             <button onClick={handleShareCPA} style={{ ...btnSecondary, fontSize: 13, padding: '10px 18px' }}>{"\uD83D\uDCE7"} Share with CPA</button>
             <button onClick={onBack} style={btnSecondary}>{"\u2190"} New Analysis</button>
           </div>
@@ -194,6 +196,95 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, photos 
         </div>
 
         {/* Uploaded Photos Exhibit */}
+
+        {/* Multi-Year Depreciation Schedule */}
+        {depSchedule && depSchedule.length > 0 && (
+          <div style={{ ...cardStyle, marginBottom: 24 }}>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>Depreciation Schedule — With Cost Segregation</div>
+            <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 16 }}>
+              MACRS depreciation by asset class, half-year convention for 5/15-year property, mid-month convention for building.
+              {parseFloat(r.bonusRate) > 0 && ` Includes ${r.bonusRate}% bonus depreciation in Year 1.`}
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 640 }}>
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${colors.accent}44` }}>
+                    {['Year', 'Calendar Yr', '5-Year PP', '15-Year LI', `${r.buildingLife}-Yr Bldg`, 'Total w/ CS', 'Total w/o CS', 'Benefit', 'Tax Savings'].map((h, i) => (
+                      <th key={i} style={{
+                        padding: '8px 6px', textAlign: i < 2 ? 'center' : 'right',
+                        fontWeight: 700, color: colors.textDim, fontSize: 10,
+                        textTransform: 'uppercase', letterSpacing: '0.04em',
+                      }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {depSchedule.slice(0, showFullSchedule ? undefined : 10).map((row, i) => (
+                    <tr key={i} style={{
+                      borderBottom: `1px solid ${colors.cardBorder}`,
+                      background: i === 0 ? colors.accentGlow : (i % 2 === 0 ? 'transparent' : `${colors.cardBorder}33`),
+                    }}>
+                      <td style={{ padding: '7px 6px', textAlign: 'center', fontWeight: 600, color: colors.textDim }}>{row.year}</td>
+                      <td style={{ padding: '7px 6px', textAlign: 'center', color: colors.textDim }}>{row.calendarYear}</td>
+                      <td style={{ padding: '7px 6px', textAlign: 'right', color: row.dep5yr > 0 ? colors.accent : colors.textMuted }}>{row.dep5yr > 0 ? fmt(row.dep5yr) : '\u2014'}</td>
+                      <td style={{ padding: '7px 6px', textAlign: 'right', color: row.dep15yr > 0 ? colors.gold : colors.textMuted }}>{row.dep15yr > 0 ? fmt(row.dep15yr) : '\u2014'}</td>
+                      <td style={{ padding: '7px 6px', textAlign: 'right', color: colors.blue }}>{fmt(row.depBuilding)}</td>
+                      <td style={{ padding: '7px 6px', textAlign: 'right', fontWeight: 600 }}>{fmt(row.totalCS)}</td>
+                      <td style={{ padding: '7px 6px', textAlign: 'right', color: colors.textMuted }}>{fmt(row.totalNoCS)}</td>
+                      <td style={{ padding: '7px 6px', textAlign: 'right', color: row.benefit > 0 ? colors.accent : row.benefit < 0 ? colors.red : colors.textMuted, fontWeight: row.benefit > 0 ? 600 : 400 }}>
+                        {row.benefit > 0 ? '+' : ''}{fmt(row.benefit)}
+                      </td>
+                      <td style={{ padding: '7px 6px', textAlign: 'right', color: row.taxSavings > 0 ? colors.accent : colors.textMuted }}>
+                        {row.taxSavings > 0 ? fmt(row.taxSavings) : '\u2014'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                {/* Cumulative totals row */}
+                <tfoot>
+                  <tr style={{ borderTop: `2px solid ${colors.accent}44` }}>
+                    <td colSpan={2} style={{ padding: '8px 6px', fontWeight: 700, fontSize: 11 }}>
+                      {showFullSchedule ? 'TOTAL' : `${Math.min(10, depSchedule.length)}-YEAR TOTAL`}
+                    </td>
+                    {(() => {
+                      const rows = depSchedule.slice(0, showFullSchedule ? undefined : 10);
+                      const sum = (fn) => rows.reduce((s, r) => s + fn(r), 0);
+                      return (
+                        <>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(r => r.dep5yr))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.gold }}>{fmt(sum(r => r.dep15yr))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.blue }}>{fmt(sum(r => r.depBuilding))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}>{fmt(sum(r => r.totalCS))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.textMuted }}>{fmt(sum(r => r.totalNoCS))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(r => r.benefit))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(r => r.taxSavings))}</td>
+                        </>
+                      );
+                    })()}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {depSchedule.length > 10 && (
+              <div style={{ textAlign: 'center', marginTop: 12 }}>
+                <button
+                  onClick={() => setShowFullSchedule(!showFullSchedule)}
+                  style={{
+                    background: 'transparent', border: `1px solid ${colors.inputBorder}`,
+                    color: colors.textDim, padding: '8px 20px', borderRadius: 8,
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  {showFullSchedule ? `Show First 10 Years` : `Show Full ${depSchedule.length}-Year Schedule`}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Photos Exhibit (original) */}
         {photos.length > 0 && (
           <div style={{ ...cardStyle, marginBottom: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>Exhibit — Property Photographs</div>
@@ -273,7 +364,7 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, photos 
         {/* Bottom CTA */}
         <div className="csp-results-bottom-cta" style={{ textAlign: 'center', padding: '32px 0', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 12 }}>
           <button
-            onClick={() => generatePDF(r, formData, unitCostDetail)}
+            onClick={() => generatePDF(r, formData, unitCostDetail, depSchedule)}
             style={{
               ...btnPrimary, fontSize: 15, padding: '14px 28px', marginRight: 12,
               background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentDim})`,

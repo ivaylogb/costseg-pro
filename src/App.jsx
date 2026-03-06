@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { runCostSegAnalysis } from './engine';
 import { computeUnitCostBreakdown, applyAllocationFactor } from './unitCosts';
 import { validateForm, getWarnings } from './validation';
+import { generateDepreciationSchedule } from './depreciationSchedule';
 import { colors, btnPrimary, btnSecondary } from './theme';
 import { StepPropertyType, StepPropertyDetails, StepBuildingInfo, StepReview } from './steps';
 import { ResultsDashboard } from './Results';
@@ -10,6 +11,7 @@ export default function App() {
   const [step, setStep] = useState(0);
   const [results, setResults] = useState(null);
   const [unitCostDetail, setUnitCostDetail] = useState(null);
+  const [depSchedule, setDepSchedule] = useState(null);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     propertyType: "single_family",
@@ -64,13 +66,15 @@ export default function App() {
     const r = runCostSegAnalysis(formData);
     const breakdown = computeUnitCostBreakdown(formData, r.depreciableBasis);
     const detail = applyAllocationFactor(breakdown, r.pp5Total, r.li15Total);
+    const schedule = generateDepreciationSchedule(r, formData);
     setResults(r);
     setUnitCostDetail(detail);
+    setDepSchedule(schedule);
     setStep(4);
   };
 
   if (step === 4 && results) {
-    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); }} />;
+    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} depSchedule={depSchedule} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); setDepSchedule(null); }} />;
   }
 
   const steps = [
