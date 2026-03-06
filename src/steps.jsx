@@ -54,6 +54,7 @@ export function StepPropertyDetails({ formData, update }) {
 }
 
 export function StepBuildingInfo({ formData, update }) {
+  const isResidential = ["single_family", "condo", "multifamily", "apartment"].includes(formData.propertyType);
   return (
     <div>
       <h2 style={headingStyle}>Building Characteristics</h2>
@@ -75,26 +76,54 @@ export function StepBuildingInfo({ formData, update }) {
           <Input label="Bedrooms" value={formData.bedrooms} onChange={v => update("bedrooms", v)} type="number" />
           <Input label="Bathrooms" value={formData.bathrooms} onChange={v => update("bathrooms", v)} type="number" />
         </div>
-        <div
-          style={{
-            display: "flex", alignItems: "center", gap: 12, padding: "14px 18px",
-            borderRadius: 12, background: colors.card, border: `1px solid ${colors.inputBorder}`, cursor: "pointer",
-          }}
-          onClick={() => update("hasPool", !formData.hasPool)}
-        >
-          <div style={{
-            width: 22, height: 22, borderRadius: 6,
-            border: `2px solid ${formData.hasPool ? colors.accent : colors.inputBorder}`,
-            background: formData.hasPool ? colors.accent : "transparent",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.15s", fontSize: 13, color: colors.bg,
-          }}>{formData.hasPool ? "✓" : ""}</div>
-          <div>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>Property has a swimming pool</div>
-            <div style={{ fontSize: 12, color: colors.textMuted }}>Pools qualify as 15-year land improvements</div>
+
+        {/* Property Features Section */}
+        <div style={{ marginTop: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: colors.textDim, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.06em" }}>Property Features</div>
+          <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 16 }}>These significantly impact your cost segregation results. Furnished properties and those with specialty amenities typically qualify for higher accelerated depreciation.</div>
+
+          <div style={{ display: "grid", gap: 10 }}>
+            {isResidential && <Toggle label="Property is furnished" sub="Furnished rentals / STRs have significantly more 5-year personal property (furniture, TVs, decor)" checked={formData.isFurnished} onChange={() => update("isFurnished", !formData.isFurnished)} />}
+            <Toggle label="Has a swimming pool" sub="Pools qualify as 15-year land improvements" checked={formData.hasPool} onChange={() => update("hasPool", !formData.hasPool)} />
+            <Toggle label="Has a hot tub or jacuzzi" sub="Hot tubs and related plumbing/electrical qualify as 5-year property" checked={formData.hasHotTub} onChange={() => update("hasHotTub", !formData.hasHotTub)} />
+            <Toggle label="Has fireplace insert(s)" sub="Prefabricated fireplace inserts qualify as 5-year personal property" checked={formData.hasFireplace} onChange={() => update("hasFireplace", !formData.hasFireplace)} />
+            {formData.hasFireplace && (
+              <div style={{ marginLeft: 34 }}>
+                <Select label="Number of Fireplaces" value={formData.numFireplaces} onChange={v => update("numFireplaces", v)} options={[
+                  { value: "1", label: "1" }, { value: "2", label: "2" }, { value: "3", label: "3" }, { value: "4", label: "4+" },
+                ]} />
+              </div>
+            )}
+            <Toggle label="Has game room or theater room" sub="Pool tables, arcade equipment, theater seating, and specialty AV equipment" checked={formData.hasGameRoom} onChange={() => update("hasGameRoom", !formData.hasGameRoom)} />
           </div>
         </div>
+
         <Input label="Your Marginal Tax Rate (%)" value={formData.taxRate} onChange={v => update("taxRate", v)} placeholder="37" type="number" helper="Federal + state combined rate" />
+      </div>
+    </div>
+  );
+}
+
+function Toggle({ label, sub, checked, onChange }) {
+  return (
+    <div
+      style={{
+        display: "flex", alignItems: "center", gap: 12, padding: "14px 18px",
+        borderRadius: 12, background: colors.card, border: `1px solid ${checked ? colors.accent + "66" : colors.inputBorder}`, cursor: "pointer",
+        transition: "all 0.15s",
+      }}
+      onClick={onChange}
+    >
+      <div style={{
+        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+        border: `2px solid ${checked ? colors.accent : colors.inputBorder}`,
+        background: checked ? colors.accent : "transparent",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all 0.15s", fontSize: 13, color: colors.bg,
+      }}>{checked ? "✓" : ""}</div>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: 14 }}>{label}</div>
+        {sub && <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{sub}</div>}
       </div>
     </div>
   );
@@ -102,6 +131,13 @@ export function StepBuildingInfo({ formData, update }) {
 
 export function StepReview({ formData }) {
   const profile = ALLOCATION_PROFILES[formData.propertyType];
+  const features = [
+    formData.isFurnished && "Furnished",
+    formData.hasPool && "Pool",
+    formData.hasHotTub && "Hot Tub",
+    formData.hasFireplace && `Fireplace(s): ${formData.numFireplaces || 1}`,
+    formData.hasGameRoom && "Game Room / Theater",
+  ].filter(Boolean).join(", ") || "None";
   const items = [
     ["Property Type", profile?.label],
     ["Address", [formData.address, formData.city, formData.state, formData.zip].filter(Boolean).join(", ") || "—"],
@@ -111,7 +147,7 @@ export function StepReview({ formData }) {
     ["Year Purchased", formData.yearPurchased || "—"],
     ["Square Footage", formData.sqft ? `${parseInt(formData.sqft).toLocaleString()} SF` : "—"],
     ["Building Grade", formData.buildingGrade?.charAt(0).toUpperCase() + formData.buildingGrade?.slice(1)],
-    ["Pool", formData.hasPool ? "Yes" : "No"],
+    ["Property Features", features],
     ["Tax Rate", formData.taxRate + "%"],
   ];
   return (
