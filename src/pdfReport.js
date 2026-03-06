@@ -1,5 +1,5 @@
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const C = {
   primary: [16, 185, 129],
@@ -172,7 +172,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
 
   y = sectionHeading(y, 'Cost Allocation Summary');
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
     head: [['Asset Classification', 'Recovery Period', 'Method', 'Allocated Cost', '% of Basis']],
@@ -193,7 +193,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   y = doc.lastAutoTable.finalY + 30;
   y = sectionHeading(y, 'Year 1 Depreciation Comparison');
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
     head: [['Scenario', 'Year 1 Depreciation', 'Tax Savings']],
@@ -220,7 +220,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   const isRes = ["single_family", "condo", "multifamily", "apartment"].includes(formData.propertyType);
   const features = [formData.isShortTermRental && "STR", formData.isFurnished && "Furnished", formData.hasPool && "Pool", formData.hasHotTub && "Hot Tub", formData.hasFireplace && (formData.numFireplaces || 1) + " Fireplace(s)", formData.hasGameRoom && "Game Room", formData.hasDeck && "Deck", formData.recentlyRenovated && "Renovated"].filter(Boolean).join(', ') || 'None';
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
     body: [
@@ -266,7 +266,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
     ]);
     const total5 = unitCostDetail.pp5Total;
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
       head: [['Description', 'Est. Qty', 'Unit Cost', 'Base Cost', 'Allocated Cost']],
@@ -293,7 +293,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
     ]);
     const total15 = unitCostDetail.li15Total;
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
       head: [['Description', 'Est. Qty', 'Unit Cost', 'Base Cost', 'Allocated Cost']],
@@ -339,7 +339,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
     const sumRows = showYears;
     const sum = (fn) => sumRows.reduce((s, row) => s + fn(row), 0);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
       head: [['Yr', 'Cal. Yr', '5-Yr PP', '15-Yr LI', r.buildingLife + '-Yr Bldg', 'Total w/ CS', 'Total w/o CS', 'Benefit', 'Tax Savings']],

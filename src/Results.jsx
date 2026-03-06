@@ -198,91 +198,126 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
         {/* Uploaded Photos Exhibit */}
 
         {/* Multi-Year Depreciation Schedule */}
-        {depSchedule && depSchedule.length > 0 && (
-          <div style={{ ...cardStyle, marginBottom: 24 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>Depreciation Schedule — With Cost Segregation</div>
-            <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 16 }}>
-              MACRS depreciation by asset class, half-year convention for 5/15-year property, mid-month convention for building.
-              {parseFloat(r.bonusRate) > 0 && ` Includes ${r.bonusRate}% bonus depreciation in Year 1.`}
-            </div>
+        {depSchedule && depSchedule.length > 0 && (() => {
+          const sumRange = (arr) => ({
+            totalCS: arr.reduce((s, row) => s + row.totalCS, 0),
+            totalNoCS: arr.reduce((s, row) => s + row.totalNoCS, 0),
+            benefit: arr.reduce((s, row) => s + row.benefit, 0),
+            taxSavings: arr.reduce((s, row) => s + row.taxSavings, 0),
+          });
+          const y1 = sumRange(depSchedule.slice(0, 1));
+          const y5 = sumRange(depSchedule.slice(0, 5));
+          const y10 = sumRange(depSchedule.slice(0, 10));
+          const total = sumRange(depSchedule);
 
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 640 }}>
-                <thead>
-                  <tr style={{ borderBottom: `2px solid ${colors.accent}44` }}>
-                    {['Year', 'Calendar Yr', '5-Year PP', '15-Year LI', `${r.buildingLife}-Yr Bldg`, 'Total w/ CS', 'Total w/o CS', 'Benefit', 'Tax Savings'].map((h, i) => (
-                      <th key={i} style={{
-                        padding: '8px 6px', textAlign: i < 2 ? 'center' : 'right',
-                        fontWeight: 700, color: colors.textDim, fontSize: 10,
-                        textTransform: 'uppercase', letterSpacing: '0.04em',
-                      }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {depSchedule.slice(0, showFullSchedule ? undefined : 10).map((row, i) => (
-                    <tr key={i} style={{
-                      borderBottom: `1px solid ${colors.cardBorder}`,
-                      background: i === 0 ? colors.accentGlow : (i % 2 === 0 ? 'transparent' : `${colors.cardBorder}33`),
-                    }}>
-                      <td style={{ padding: '7px 6px', textAlign: 'center', fontWeight: 600, color: colors.textDim }}>{row.year}</td>
-                      <td style={{ padding: '7px 6px', textAlign: 'center', color: colors.textDim }}>{row.calendarYear}</td>
-                      <td style={{ padding: '7px 6px', textAlign: 'right', color: row.dep5yr > 0 ? colors.accent : colors.textMuted }}>{row.dep5yr > 0 ? fmt(row.dep5yr) : '\u2014'}</td>
-                      <td style={{ padding: '7px 6px', textAlign: 'right', color: row.dep15yr > 0 ? colors.gold : colors.textMuted }}>{row.dep15yr > 0 ? fmt(row.dep15yr) : '\u2014'}</td>
-                      <td style={{ padding: '7px 6px', textAlign: 'right', color: colors.blue }}>{fmt(row.depBuilding)}</td>
-                      <td style={{ padding: '7px 6px', textAlign: 'right', fontWeight: 600 }}>{fmt(row.totalCS)}</td>
-                      <td style={{ padding: '7px 6px', textAlign: 'right', color: colors.textMuted }}>{fmt(row.totalNoCS)}</td>
-                      <td style={{ padding: '7px 6px', textAlign: 'right', color: row.benefit > 0 ? colors.accent : row.benefit < 0 ? colors.red : colors.textMuted, fontWeight: row.benefit > 0 ? 600 : 400 }}>
-                        {row.benefit > 0 ? '+' : ''}{fmt(row.benefit)}
-                      </td>
-                      <td style={{ padding: '7px 6px', textAlign: 'right', color: row.taxSavings > 0 ? colors.accent : colors.textMuted }}>
-                        {row.taxSavings > 0 ? fmt(row.taxSavings) : '\u2014'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                {/* Cumulative totals row */}
-                <tfoot>
-                  <tr style={{ borderTop: `2px solid ${colors.accent}44` }}>
-                    <td colSpan={2} style={{ padding: '8px 6px', fontWeight: 700, fontSize: 11 }}>
-                      {showFullSchedule ? 'TOTAL' : `${Math.min(10, depSchedule.length)}-YEAR TOTAL`}
-                    </td>
-                    {(() => {
-                      const rows = depSchedule.slice(0, showFullSchedule ? undefined : 10);
-                      const sum = (fn) => rows.reduce((s, row) => s + fn(row), 0);
-                      return (
-                        <>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(row => row.dep5yr))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.gold }}>{fmt(sum(row => row.dep15yr))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.blue }}>{fmt(sum(row => row.depBuilding))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}>{fmt(sum(row => row.totalCS))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.textMuted }}>{fmt(sum(row => row.totalNoCS))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(row => row.benefit))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(row => row.taxSavings))}</td>
-                        </>
-                      );
-                    })()}
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-
-            {depSchedule.length > 10 && (
-              <div style={{ textAlign: 'center', marginTop: 12 }}>
-                <button
-                  onClick={() => setShowFullSchedule(!showFullSchedule)}
-                  style={{
-                    background: 'transparent', border: `1px solid ${colors.inputBorder}`,
-                    color: colors.textDim, padding: '8px 20px', borderRadius: 8,
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  {showFullSchedule ? `Show First 10 Years` : `Show Full ${depSchedule.length}-Year Schedule`}
-                </button>
+          return (
+            <div style={{ ...cardStyle, marginBottom: 24 }}>
+              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>Depreciation Schedule</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 20 }}>
+                MACRS depreciation with cost segregation vs. straight-line only.
+                {parseFloat(r.bonusRate) > 0 && ` Includes ${r.bonusRate}% bonus depreciation in Year 1.`}
               </div>
-            )}
-          </div>
-        )}
+
+              {/* Summary Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 20 }}>
+                {[
+                  { label: 'Year 1', data: y1, accent: true },
+                  { label: 'Years 1–5', data: y5 },
+                  { label: 'Years 1–10', data: y10 },
+                  { label: `Full ${depSchedule.length} Years`, data: total },
+                ].map((period, i) => (
+                  <div key={i} style={{
+                    padding: '14px 12px', borderRadius: 10,
+                    background: period.accent ? colors.accentGlow : `${colors.cardBorder}55`,
+                    border: `1px solid ${period.accent ? colors.accent + '44' : colors.cardBorder}`,
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>{period.label}</div>
+                    <div style={{ fontSize: 11, color: colors.textDim, marginBottom: 2 }}>
+                      With CS: <span style={{ fontWeight: 700, color: colors.text }}>{fmt(period.data.totalCS)}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: colors.textMuted, marginBottom: 6 }}>
+                      Without: {fmt(period.data.totalNoCS)}
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: period.data.benefit > 0 ? colors.accent : colors.red }}>
+                      {period.data.benefit > 0 ? '+' : ''}{fmt(period.data.benefit)}
+                    </div>
+                    <div style={{ fontSize: 10, color: colors.textMuted, marginTop: 2 }}>
+                      Tax savings: {fmt(period.data.taxSavings)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Expandable Detail Table */}
+              <div
+                onClick={() => setShowFullSchedule(!showFullSchedule)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '12px 16px', borderRadius: 10, cursor: 'pointer',
+                  background: showFullSchedule ? `${colors.blue}12` : `${colors.cardBorder}44`,
+                  border: `1px solid ${showFullSchedule ? colors.blue + '44' : colors.cardBorder}`,
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 600, color: showFullSchedule ? colors.blue : colors.textDim }}>
+                  Year-by-Year Detail
+                </div>
+                <div style={{
+                  fontSize: 16, color: showFullSchedule ? colors.blue : colors.textMuted,
+                  transform: showFullSchedule ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s',
+                }}>{'\u25BE'}</div>
+              </div>
+
+              {showFullSchedule && (
+                <div style={{ overflowX: 'auto', marginTop: 12 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 420 }}>
+                    <thead>
+                      <tr style={{ borderBottom: `2px solid ${colors.accent}44` }}>
+                        {['Year', 'Total w/ CS', 'Total w/o CS', 'Benefit', '5-Yr PP', '15-Yr LI', `${r.buildingLife}-Yr Bldg`].map((h, i) => (
+                          <th key={i} style={{
+                            padding: '8px 6px', textAlign: i === 0 ? 'center' : 'right',
+                            fontWeight: 700, color: colors.textDim, fontSize: 10,
+                            textTransform: 'uppercase', letterSpacing: '0.04em',
+                          }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {depSchedule.map((row, i) => (
+                        <tr key={i} style={{
+                          borderBottom: `1px solid ${colors.cardBorder}`,
+                          background: i === 0 ? colors.accentGlow : (i % 2 === 0 ? 'transparent' : `${colors.cardBorder}33`),
+                        }}>
+                          <td style={{ padding: '6px', textAlign: 'center', fontWeight: 600, color: colors.textDim, fontSize: 11 }}>{row.calendarYear}</td>
+                          <td style={{ padding: '6px', textAlign: 'right', fontWeight: 600 }}>{fmt(row.totalCS)}</td>
+                          <td style={{ padding: '6px', textAlign: 'right', color: colors.textMuted }}>{fmt(row.totalNoCS)}</td>
+                          <td style={{ padding: '6px', textAlign: 'right', fontWeight: 600, color: row.benefit > 0 ? colors.accent : row.benefit < 0 ? colors.red : colors.textMuted }}>
+                            {row.benefit > 0 ? '+' : ''}{fmt(row.benefit)}
+                          </td>
+                          <td style={{ padding: '6px', textAlign: 'right', color: row.dep5yr > 0 ? colors.accent : colors.textMuted, fontSize: 11 }}>{row.dep5yr > 0 ? fmt(row.dep5yr) : '\u2014'}</td>
+                          <td style={{ padding: '6px', textAlign: 'right', color: row.dep15yr > 0 ? colors.gold : colors.textMuted, fontSize: 11 }}>{row.dep15yr > 0 ? fmt(row.dep15yr) : '\u2014'}</td>
+                          <td style={{ padding: '6px', textAlign: 'right', color: colors.blue, fontSize: 11 }}>{fmt(row.depBuilding)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: `2px solid ${colors.accent}44` }}>
+                        <td style={{ padding: '8px 6px', fontWeight: 700, fontSize: 11 }}>TOTAL</td>
+                        <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}>{fmt(total.totalCS)}</td>
+                        <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.textMuted }}>{fmt(total.totalNoCS)}</td>
+                        <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(total.benefit)}</td>
+                        <td colSpan={3} style={{ padding: '8px 6px', textAlign: 'right', fontSize: 10, color: colors.textMuted }}>
+                          Cumulative: {fmt(total.totalCS)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Photos Exhibit (original) */}
         {photos.length > 0 && (
