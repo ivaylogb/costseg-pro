@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { runCostSegAnalysis } from './engine';
+import { computeUnitCostBreakdown } from './unitCosts';
+import { validateForm, getWarnings } from './validation';
 import { colors, btnPrimary, btnSecondary } from './theme';
 import { StepPropertyType, StepPropertyDetails, StepBuildingInfo, StepReview } from './steps';
 import { ResultsDashboard } from './Results';
@@ -7,6 +9,7 @@ import { ResultsDashboard } from './Results';
 export default function App() {
   const [step, setStep] = useState(0);
   const [results, setResults] = useState(null);
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     propertyType: "single_family",
     propertyName: "",
@@ -38,7 +41,23 @@ export default function App() {
     taxRate: "37",
   });
 
-  const update = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+  const update = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error for this field when user edits it
+    if (errors[field]) {
+      setErrors(prev => { const next = { ...prev }; delete next[field]; return next; });
+    }
+  };
+
+  const handleNext = () => {
+    const { valid, errors: stepErrors } = validateForm(formData, step);
+    if (!valid) {
+      setErrors(stepErrors);
+      return;
+    }
+    setErrors({});
+    setStep(step + 1);
+  };
 
   const handleSubmit = () => {
     const r = runCostSegAnalysis(formData);
@@ -51,11 +70,13 @@ export default function App() {
   }
 
   const steps = [
-    { title: "Property Type", icon: "🏠" },
-    { title: "Property Details", icon: "📋" },
-    { title: "Building Info", icon: "🔨" },
-    { title: "Review & Run", icon: "⚡" },
+    { title: "Property Type", icon: "\uD83C\uDFE0" },
+    { title: "Property Details", icon: "\uD83D\uDCCB" },
+    { title: "Building Info", icon: "\uD83D\uDD28" },
+    { title: "Review & Run", icon: "\u26A1" },
   ];
+
+  const warnings = step === 3 ? getWarnings(formData) : [];
 
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${colors.bg} 0%, #0F172A 100%)`, color: colors.text, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
@@ -90,17 +111,30 @@ export default function App() {
 
         {/* Step Content */}
         {step === 0 && <StepPropertyType formData={formData} update={update} />}
-        {step === 1 && <StepPropertyDetails formData={formData} update={update} />}
-        {step === 2 && <StepBuildingInfo formData={formData} update={update} />}
-        {step === 3 && <StepReview formData={formData} />}
+        {step === 1 && <StepPropertyDetails formData={formData} update={update} errors={errors} />}
+        {step === 2 && <StepBuildingInfo formData={formData} update={update} errors={errors} />}
+        {step === 3 && <StepReview formData={formData} warnings={warnings} />}
+
+        {/* Validation Errors Summary */}
+        {Object.keys(errors).length > 0 && (
+          <div style={{
+            marginTop: 16, padding: "12px 16px", borderRadius: 10,
+            background: `${colors.red}15`, border: `1px solid ${colors.red}33`,
+          }}>
+            <div style={{ fontSize: 13, color: colors.red, fontWeight: 600, marginBottom: 4 }}>Please fix the following:</div>
+            {Object.values(errors).map((err, i) => (
+              <div key={i} style={{ fontSize: 12, color: colors.red, opacity: 0.9, marginTop: 2 }}>{"\u2022"} {err}</div>
+            ))}
+          </div>
+        )}
 
         {/* Navigation */}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32 }}>
           {step > 0 ? (
-            <button onClick={() => setStep(step - 1)} style={btnSecondary}>← Back</button>
+            <button onClick={() => { setStep(step - 1); setErrors({}); }} style={btnSecondary}>{"\u2190"} Back</button>
           ) : <div />}
           {step < 3 ? (
-            <button onClick={() => setStep(step + 1)} style={btnPrimary}>Continue →</button>
+            <button onClick={handleNext} style={btnPrimary}>Continue {"\u2192"}</button>
           ) : (
             <button onClick={handleSubmit} style={{
               ...btnPrimary,
@@ -108,7 +142,7 @@ export default function App() {
               fontSize: 16, padding: "14px 32px",
               boxShadow: `0 0 30px ${colors.accentGlow}`,
             }}>
-              ⚡ Run Cost Segregation Analysis
+              {"\u26A1"} Run Cost Segregation Analysis
             </button>
           )}
         </div>

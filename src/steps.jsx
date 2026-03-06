@@ -28,7 +28,7 @@ export function StepPropertyType({ formData, update }) {
   );
 }
 
-export function StepPropertyDetails({ formData, update }) {
+export function StepPropertyDetails({ formData, update, errors = {} }) {
   return (
     <div>
       <h2 style={headingStyle}>Property & Purchase Details</h2>
@@ -42,19 +42,19 @@ export function StepPropertyDetails({ formData, update }) {
           <Input label="ZIP" value={formData.zip} onChange={v => update("zip", v)} placeholder="92024" />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="Purchase Price ($)" value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder="590000" type="number" />
-          <Input label="Land Value ($)" value={formData.landValue} onChange={v => update("landValue", v)} placeholder="100000" type="number" helper="County assessor or appraisal" />
+          <Input label="Purchase Price ($)" value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder="590000" type="number" error={errors.purchasePrice} />
+          <Input label="Land Value ($)" value={formData.landValue} onChange={v => update("landValue", v)} placeholder="100000" type="number" helper="County assessor or appraisal" error={errors.landValue} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="Year Built" value={formData.yearBuilt} onChange={v => update("yearBuilt", v)} placeholder="1990" type="number" />
-          <Input label="Year Purchased / Placed in Service" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2024" type="number" />
+          <Input label="Year Built" value={formData.yearBuilt} onChange={v => update("yearBuilt", v)} placeholder="1990" type="number" error={errors.yearBuilt} />
+          <Input label="Year Purchased / Placed in Service" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2024" type="number" error={errors.yearPurchased} />
         </div>
       </div>
     </div>
   );
 }
 
-export function StepBuildingInfo({ formData, update }) {
+export function StepBuildingInfo({ formData, update, errors = {} }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const isResidential = ["single_family", "condo", "multifamily", "apartment"].includes(formData.propertyType);
 
@@ -64,7 +64,7 @@ export function StepBuildingInfo({ formData, update }) {
       <p style={subStyle}>These details help us estimate your component allocations more accurately.</p>
       <div style={{ display: "grid", gap: 16, marginTop: 24 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="Square Footage" value={formData.sqft} onChange={v => update("sqft", v)} placeholder="1500" type="number" />
+          <Input label="Square Footage" value={formData.sqft} onChange={v => update("sqft", v)} placeholder="1500" type="number" error={errors.sqft} />
           <Select label="Number of Stories" value={formData.stories} onChange={v => update("stories", v)} options={[
             { value: "1", label: "1 Story" }, { value: "2", label: "2 Stories" }, { value: "3", label: "3+ Stories" },
           ]} />
@@ -113,7 +113,7 @@ export function StepBuildingInfo({ formData, update }) {
           </div>
         </div>
 
-        <Input label="Your Marginal Tax Rate (%)" value={formData.taxRate} onChange={v => update("taxRate", v)} placeholder="37" type="number" helper="Federal + state combined rate" />
+        <Input label="Your Marginal Tax Rate (%)" value={formData.taxRate} onChange={v => update("taxRate", v)} placeholder="37" type="number" helper="Federal + state combined rate" error={errors.taxRate} />
 
         {/* ─── Advanced Details Toggle ─── */}
         <div
@@ -228,7 +228,7 @@ function Toggle({ label, sub, checked, onChange }) {
   );
 }
 
-export function StepReview({ formData }) {
+export function StepReview({ formData, warnings = [] }) {
   const profile = ALLOCATION_PROFILES[formData.propertyType];
   const poolLabels = { inground_concrete: "In-Ground Concrete", inground_vinyl: "In-Ground Vinyl", above_ground: "Above Ground" };
   const deckLabels = { small: "Small", medium: "Medium", large: "Large" };
@@ -278,6 +278,21 @@ export function StepReview({ formData }) {
           </div>
         ))}
       </div>
+
+      {/* Warnings */}
+      {warnings.length > 0 && (
+        <div style={{
+          marginTop: 16, padding: "14px 18px", borderRadius: 12,
+          background: `${colors.gold}12`, border: `1px solid ${colors.gold}33`,
+        }}>
+          {warnings.map((w, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginTop: i > 0 ? 8 : 0 }}>
+              <div style={{ fontSize: 14, flexShrink: 0 }}>{"\u26A0\uFE0F"}</div>
+              <div style={{ fontSize: 12, color: colors.textDim, lineHeight: 1.5 }}>{w}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* STR / 39-year notice */}
       {formData.isShortTermRental && ["single_family", "condo", "multifamily", "apartment"].includes(formData.propertyType) && (

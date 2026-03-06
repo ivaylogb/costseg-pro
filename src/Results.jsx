@@ -1,5 +1,6 @@
 import { colors, cardStyle, btnSecondary, btnPrimary, fmt } from './theme';
 import { StatCard, AllocRow, ComponentTable } from './components';
+import { generatePDF } from './pdfReport';
 
 export function ResultsDashboard({ results: r, formData, photos = [], onBack }) {
   const address = [formData.address, formData.city, formData.state, formData.zip].filter(Boolean).join(', ');
@@ -52,8 +53,9 @@ export function ResultsDashboard({ results: r, formData, photos = [], onBack }) 
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={handleShareCPA} style={{ ...btnPrimary, fontSize: 13, padding: '10px 18px' }}>📧 Share with CPA</button>
-            <button onClick={onBack} style={btnSecondary}>← New Analysis</button>
+            <button onClick={() => generatePDF(r, formData)} style={{ ...btnPrimary, fontSize: 13, padding: '10px 18px', background: colors.blue }}>{"\uD83D\uDCC4"} Download PDF</button>
+            <button onClick={handleShareCPA} style={{ ...btnSecondary, fontSize: 13, padding: '10px 18px' }}>{"\uD83D\uDCE7"} Share with CPA</button>
+            <button onClick={onBack} style={btnSecondary}>{"\u2190"} New Analysis</button>
           </div>
         </div>
       </div>
@@ -255,11 +257,21 @@ export function ResultsDashboard({ results: r, formData, photos = [], onBack }) 
 
         {/* Bottom CTA */}
         <div style={{ textAlign: 'center', padding: '32px 0' }}>
-          <button onClick={handleShareCPA} style={{ ...btnPrimary, fontSize: 15, padding: '14px 28px', marginRight: 12 }}>
-            📧 Share This Report with Your CPA
+          <button
+            onClick={() => generatePDF(r, formData, unitCostDetail)}
+            style={{
+              ...btnPrimary, fontSize: 15, padding: '14px 28px', marginRight: 12,
+              background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentDim})`,
+              boxShadow: `0 0 20px ${colors.accentGlow}`,
+            }}
+          >
+            {"\uD83D\uDCC4"} Download PDF Report
+          </button>
+          <button onClick={handleShareCPA} style={{ ...btnSecondary, fontSize: 15, padding: '14px 28px', marginRight: 12 }}>
+            {"\uD83D\uDCE7"} Share with CPA
           </button>
           <button onClick={() => window.print()} style={{ ...btnSecondary, fontSize: 15, padding: '14px 28px' }}>
-            🖨 Print Report
+            {"\uD83D\uDDA8"} Print
           </button>
         </div>
 

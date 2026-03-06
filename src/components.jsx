@@ -1,21 +1,22 @@
 import { colors, cardStyle, fmt } from './theme';
 
-export function Input({ label, value, onChange, placeholder, type = "text", helper }) {
+export function Input({ label, value, onChange, placeholder, type = "text", helper, error }) {
   return (
     <div>
-      <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: colors.textDim, marginBottom: 6 }}>{label}</label>
+      <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: error ? colors.red : colors.textDim, marginBottom: 6 }}>{label}</label>
       <input
         type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
         style={{
-          width: "100%", padding: "12px 14px", borderRadius: 10, border: `1.5px solid ${colors.inputBorder}`,
-          background: colors.inputBg, color: colors.text, fontSize: 15, outline: "none",
+          width: "100%", padding: "12px 14px", borderRadius: 10, border: `1.5px solid ${error ? colors.red + "99" : colors.inputBorder}`,
+          background: error ? colors.red + "08" : colors.inputBg, color: colors.text, fontSize: 15, outline: "none",
           fontFamily: "inherit", boxSizing: "border-box",
           transition: "border-color 0.15s",
         }}
-        onFocus={e => e.target.style.borderColor = colors.accent}
-        onBlur={e => e.target.style.borderColor = colors.inputBorder}
+        onFocus={e => e.target.style.borderColor = error ? colors.red : colors.accent}
+        onBlur={e => e.target.style.borderColor = error ? colors.red + "99" : colors.inputBorder}
       />
-      {helper && <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>{helper}</div>}
+      {error && <div style={{ fontSize: 11, color: colors.red, marginTop: 4 }}>{error}</div>}
+      {!error && helper && <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>{helper}</div>}
     </div>
   );
 }
