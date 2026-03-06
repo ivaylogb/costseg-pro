@@ -1,7 +1,7 @@
 import { colors, cardStyle, btnSecondary, fmt } from './theme';
 import { StatCard, AllocRow, ComponentTable } from './components';
 
-export function ResultsDashboard({ results: r, formData, onBack }) {
+export function ResultsDashboard({ results: r, formData, photos = [], onBack }) {
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${colors.bg} 0%, #0F172A 100%)`, color: colors.text, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
       {/* Header */}
@@ -88,6 +88,31 @@ export function ResultsDashboard({ results: r, formData, onBack }) {
             <div style={{ fontSize: 32, fontWeight: 800, color: colors.gold }}>{fmt(r.year1Benefit)}</div>
           </div>
         </div>
+
+        {/* Uploaded Photos Exhibit */}
+        {photos.length > 0 && (
+          <div style={{ ...cardStyle, marginBottom: 24 }}>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>Property Photographs</div>
+            <div style={{ fontSize: 13, color: colors.textDim, marginBottom: 20 }}>{photos.length} photo{photos.length !== 1 ? 's' : ''} provided by property owner</div>
+            {['exterior', 'kitchen', 'bathroom', 'flooring', 'landscape', 'other'].map(cat => {
+              const catPhotos = photos.filter(p => p.category === cat);
+              if (catPhotos.length === 0) return null;
+              const catLabels = { exterior: 'Exterior / Front', kitchen: 'Kitchen', bathroom: 'Bathrooms', flooring: 'Flooring', landscape: 'Landscaping / Pool', other: 'Other' };
+              return (
+                <div key={cat} style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{catLabels[cat]}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                    {catPhotos.map(photo => (
+                      <div key={photo.id} style={{ borderRadius: 8, overflow: 'hidden', border: `1px solid ${colors.cardBorder}`, aspectRatio: '4/3' }}>
+                        <img src={photo.url} alt={photo.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Disclaimer */}
         <div style={{ ...cardStyle, borderColor: `${colors.gold}33`, background: `${colors.gold}08` }}>
