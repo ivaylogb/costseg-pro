@@ -2,7 +2,7 @@ import { colors, cardStyle, btnSecondary, btnPrimary, fmt } from './theme';
 import { StatCard, AllocRow, ComponentTable } from './components';
 import { generatePDF } from './pdfReport';
 
-export function ResultsDashboard({ results: r, formData, photos = [], onBack }) {
+export function ResultsDashboard({ results: r, formData, unitCostDetail, photos = [], onBack }) {
   const address = [formData.address, formData.city, formData.state, formData.zip].filter(Boolean).join(', ');
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const propertyName = formData.propertyName || address || 'Subject Property';
@@ -42,6 +42,21 @@ export function ResultsDashboard({ results: r, formData, photos = [], onBack }) 
 
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${colors.bg} 0%, #0F172A 100%)`, color: colors.text, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+      <style>{`
+        @media (max-width: 600px) {
+          .csp-results-header-btns { flex-direction: column !important; gap: 6px !important; }
+          .csp-results-header-btns button { font-size: 12px !important; padding: 8px 12px !important; }
+          .csp-results-prepared { grid-template-columns: 1fr !important; }
+          .csp-results-prepared > div:last-child { text-align: left !important; }
+          .csp-results-hero-num { font-size: 36px !important; }
+          .csp-results-meta { gap: 12px !important; }
+          .csp-results-meta > div { font-size: 11px !important; }
+          .csp-results-compare-grid { grid-template-columns: 1fr !important; }
+          .csp-results-component-grid { grid-template-columns: 1fr !important; }
+          .csp-results-bottom-cta { flex-direction: column !important; gap: 8px !important; }
+          .csp-results-bottom-cta button { margin-right: 0 !important; width: 100% !important; }
+        }
+      `}</style>
       {/* Header */}
       <div style={{ borderBottom: `1px solid ${colors.cardBorder}`, padding: "16px 0" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -52,7 +67,7 @@ export function ResultsDashboard({ results: r, formData, photos = [], onBack }) 
               <div style={{ fontSize: 11, color: colors.textMuted }}>Cost Segregation Analysis</div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="csp-results-header-btns" style={{ display: 'flex', gap: 10 }}>
             <button onClick={() => generatePDF(r, formData)} style={{ ...btnPrimary, fontSize: 13, padding: '10px 18px', background: colors.blue }}>{"\uD83D\uDCC4"} Download PDF</button>
             <button onClick={handleShareCPA} style={{ ...btnSecondary, fontSize: 13, padding: '10px 18px' }}>{"\uD83D\uDCE7"} Share with CPA</button>
             <button onClick={onBack} style={btnSecondary}>{"\u2190"} New Analysis</button>
@@ -64,7 +79,7 @@ export function ResultsDashboard({ results: r, formData, photos = [], onBack }) 
 
         {/* Prepared For Header */}
         <div style={{ ...cardStyle, marginBottom: 24, borderLeft: `4px solid ${colors.accent}` }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <div className="csp-results-prepared" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Prepared For</div>
               <div style={{ fontSize: 16, fontWeight: 700 }}>{propertyName}</div>
@@ -76,7 +91,7 @@ export function ResultsDashboard({ results: r, formData, photos = [], onBack }) 
               <div style={{ fontSize: 12, color: colors.textDim, marginTop: 2 }}>Preliminary Estimate</div>
             </div>
           </div>
-          <div style={{ borderTop: `1px solid ${colors.cardBorder}`, marginTop: 16, paddingTop: 12, display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+          <div className="csp-results-meta" style={{ borderTop: `1px solid ${colors.cardBorder}`, marginTop: 16, paddingTop: 12, display: 'flex', gap: 32, flexWrap: 'wrap' }}>
             <div><span style={{ fontSize: 12, color: colors.textMuted }}>Property Type: </span><span style={{ fontSize: 13, fontWeight: 600 }}>{r.propertyType}{r.isSTR ? ' (STR)' : ''}</span></div>
             <div><span style={{ fontSize: 12, color: colors.textMuted }}>Purchase Price: </span><span style={{ fontSize: 13, fontWeight: 600 }}>{fmt(r.purchasePrice)}</span></div>
             <div><span style={{ fontSize: 12, color: colors.textMuted }}>Year Purchased: </span><span style={{ fontSize: 13, fontWeight: 600 }}>{r.yearPurchased}</span></div>
@@ -88,7 +103,7 @@ export function ResultsDashboard({ results: r, formData, photos = [], onBack }) 
         {/* Hero Savings */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ fontSize: 13, color: colors.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Estimated First-Year Tax Savings</div>
-          <div style={{ fontSize: 56, fontWeight: 800, letterSpacing: "-0.03em", background: `linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          <div className="csp-results-hero-num" style={{ fontSize: 56, fontWeight: 800, letterSpacing: "-0.03em", background: `linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             {fmt(r.year1TaxSavings)}
           </div>
           <div style={{ fontSize: 14, color: colors.textDim, marginTop: 8 }}>
@@ -152,7 +167,7 @@ export function ResultsDashboard({ results: r, formData, photos = [], onBack }) 
         </div>
 
         {/* Component Details */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}>
+        <div className="csp-results-component-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}>
           <ComponentTable title="5-Year Personal Property" items={r.pp5Components} color={colors.accent} total={r.pp5Total} />
           <ComponentTable title="15-Year Land Improvements" items={r.li15Components} color={colors.gold} total={r.li15Total} />
         </div>
@@ -160,7 +175,7 @@ export function ResultsDashboard({ results: r, formData, photos = [], onBack }) 
         {/* Depreciation Comparison */}
         <div style={{ ...cardStyle, marginBottom: 24 }}>
           <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Year 1 Depreciation Comparison</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+          <div className="csp-results-compare-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
             <div style={{ padding: 20, borderRadius: 12, background: colors.accentGlow, border: `1px solid ${colors.accent}33` }}>
               <div style={{ fontSize: 12, color: colors.accent, fontWeight: 600, marginBottom: 4 }}>WITH COST SEGREGATION</div>
               <div style={{ fontSize: 28, fontWeight: 800 }}>{fmt(r.csYear1Dep)}</div>
@@ -256,7 +271,7 @@ export function ResultsDashboard({ results: r, formData, photos = [], onBack }) 
         </div>
 
         {/* Bottom CTA */}
-        <div style={{ textAlign: 'center', padding: '32px 0' }}>
+        <div className="csp-results-bottom-cta" style={{ textAlign: 'center', padding: '32px 0', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 12 }}>
           <button
             onClick={() => generatePDF(r, formData, unitCostDetail)}
             style={{

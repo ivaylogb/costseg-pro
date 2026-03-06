@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { runCostSegAnalysis } from './engine';
-import { computeUnitCostBreakdown } from './unitCosts';
+import { computeUnitCostBreakdown, applyAllocationFactor } from './unitCosts';
 import { validateForm, getWarnings } from './validation';
 import { colors, btnPrimary, btnSecondary } from './theme';
 import { StepPropertyType, StepPropertyDetails, StepBuildingInfo, StepReview } from './steps';
@@ -9,6 +9,7 @@ import { ResultsDashboard } from './Results';
 export default function App() {
   const [step, setStep] = useState(0);
   const [results, setResults] = useState(null);
+  const [unitCostDetail, setUnitCostDetail] = useState(null);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     propertyType: "single_family",
@@ -61,12 +62,15 @@ export default function App() {
 
   const handleSubmit = () => {
     const r = runCostSegAnalysis(formData);
+    const breakdown = computeUnitCostBreakdown(formData, r.depreciableBasis);
+    const detail = applyAllocationFactor(breakdown, r.pp5Total, r.li15Total);
     setResults(r);
+    setUnitCostDetail(detail);
     setStep(4);
   };
 
   if (step === 4 && results) {
-    return <ResultsDashboard results={results} formData={formData} onBack={() => { setStep(0); setResults(null); }} />;
+    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); }} />;
   }
 
   const steps = [
@@ -80,6 +84,17 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${colors.bg} 0%, #0F172A 100%)`, color: colors.text, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+      <style>{`
+        @media (max-width: 600px) {
+          .csp-form-grid-2 { grid-template-columns: 1fr !important; }
+          .csp-form-grid-3 { grid-template-columns: 1fr !important; }
+          .csp-form-heading { font-size: 22px !important; }
+          .csp-property-grid { grid-template-columns: 1fr !important; }
+          .csp-nav-btn { font-size: 13px !important; padding: 10px 18px !important; }
+          .csp-run-btn { font-size: 14px !important; padding: 12px 24px !important; }
+          .csp-step-label { font-size: 9px !important; }
+        }
+      `}</style>
       {/* Header */}
       <div style={{ borderBottom: `1px solid ${colors.cardBorder}`, padding: "20px 0" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -102,7 +117,7 @@ export default function App() {
                 height: 3, borderRadius: 2, marginBottom: 8,
                 background: i < step ? colors.accent : i === step ? `linear-gradient(90deg, ${colors.accent}, ${colors.blue})` : colors.inputBorder,
               }} />
-              <div style={{ fontSize: 11, color: i <= step ? colors.textDim : colors.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
+              <div className="csp-step-label" style={{ fontSize: 11, color: i <= step ? colors.textDim : colors.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
                 <span>{s.icon}</span> {s.title}
               </div>
             </div>
