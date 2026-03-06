@@ -66,18 +66,31 @@ const FURNITURE = {
 };
 
 const SITE = {
-  asphalt:     { cost: 2.75, unit: "SF", desc: "Asphalt paving" },
-  concrete:    { cost: 7.00, unit: "SF", desc: "Concrete sidewalk" },
-  wood_fence:  { cost: 15.50, unit: "LF", desc: "Wood fence, cedar" },
-  chain_fence: { cost: 18.00, unit: "LF", desc: "Chain link fence" },
-  wood_deck:   { cost: 22.00, unit: "SF", desc: "Wood deck" },
-  comp_deck:   { cost: 35.00, unit: "SF", desc: "Composite deck" },
-  pool_conc:   { cost: 95.00, unit: "SF", desc: "Pool, concrete/gunite" },
-  pool_vinyl:  { cost: 55.00, unit: "SF", desc: "Pool, vinyl liner" },
-  pool_above:  { cost: 3500, unit: "EA", desc: "Above-ground pool" },
-  landscape:   { cost: 4.50, unit: "SF", desc: "Landscaping & irrigation" },
-  ext_light:   { cost: 350, unit: "EA", desc: "Exterior light fixture" },
-  grill:       { cost: 165, unit: "EA", desc: "Outdoor grill" },
+  asphalt:       { cost: 2.75, unit: "SF", desc: "Asphalt paving" },
+  concrete:      { cost: 7.00, unit: "SF", desc: "Concrete sidewalk" },
+  wood_fence:    { cost: 15.50, unit: "LF", desc: "Wood fence, cedar" },
+  chain_fence:   { cost: 18.00, unit: "LF", desc: "Chain link fence" },
+  metal_fence:   { cost: 48.50, unit: "LF", desc: "Metal fence, tubular picket" },
+  wood_deck:     { cost: 22.00, unit: "SF", desc: "Wood deck" },
+  comp_deck:     { cost: 35.00, unit: "SF", desc: "Composite deck" },
+  pool_conc:     { cost: 95.00, unit: "SF", desc: "Pool, concrete/gunite" },
+  pool_vinyl:    { cost: 55.00, unit: "SF", desc: "Pool, vinyl liner" },
+  pool_above:    { cost: 3500, unit: "EA", desc: "Above-ground pool" },
+  landscape:     { cost: 4.50, unit: "SF", desc: "Landscaping & irrigation" },
+  ext_light:     { cost: 350, unit: "EA", desc: "Exterior light fixture" },
+  grill:         { cost: 165, unit: "EA", desc: "Outdoor grill" },
+  // Apartment-specific (Cedar Ridge RSMeans 2024)
+  carport:       { cost: 3972, unit: "Car", desc: "Carport, baked vinyl finish" },
+  conc_curb:     { cost: 27.00, unit: "LF", desc: "Concrete curb & gutter" },
+  monument_sign: { cost: 10400, unit: "EA", desc: "Monument sign, masonry" },
+  lot_striping:  { cost: 13.50, unit: "Car", desc: "Parking lot striping" },
+  wheel_stop:    { cost: 88.00, unit: "EA", desc: "Precast concrete wheel stop" },
+  playground:    { cost: 12500, unit: "EA", desc: "Playground equipment set" },
+  dog_park:      { cost: 13850, unit: "EA", desc: "Dog park / agility set" },
+  storm_swale:   { cost: 14.85, unit: "LF", desc: "Concrete swale" },
+  flagpole:      { cost: 3067, unit: "EA", desc: "Flagpole, aluminum, 30 ft" },
+  tennis_court:  { cost: 34000, unit: "EA", desc: "Sport court w/ fence" },
+  shed:          { cost: 40.00, unit: "SF", desc: "Storage shed, wood" },
 };
 
 export function estimateQuantities(data) {
@@ -87,29 +100,56 @@ export function estimateQuantities(data) {
   const isFurn = data.isFurnished || false;
   const grade = data.buildingGrade || "standard";
   const cust = ["custom", "luxury"].includes(grade);
-  const kitBaseLF = sqft < 1200 ? 12 : sqft < 2500 ? 18 : 24;
-  const kitWallLF = sqft < 1200 ? 8 : sqft < 2500 ? 14 : 18;
-  const counterLF = kitBaseLF + Math.round(ba * 3);
+  const isApartment = data.propertyType === "apartment";
+
+  // For apartments, bedrooms represents unit count; for SFR it's actual bedrooms
+  const unitCount = isApartment ? Math.max(br, 5) : 1;
+  const perUnitSqft = isApartment ? Math.round(sqft / unitCount) : sqft;
+
+  // Kitchen/cabinet quantities scale by unit count for apartments
+  const kitBaseLF = isApartment
+    ? Math.round(unitCount * 14)   // Cedar Ridge: 2324 LF / 166 units ≈ 14 LF/unit
+    : (sqft < 1200 ? 12 : sqft < 2500 ? 18 : 24);
+  const kitWallLF = isApartment
+    ? Math.round(unitCount * 16)   // Cedar Ridge: 2656 LF / 166 units ≈ 16 LF/unit
+    : (sqft < 1200 ? 8 : sqft < 2500 ? 14 : 18);
+  const counterLF = isApartment
+    ? Math.round(unitCount * 14)   // Cedar Ridge: 2324 LF / 166 units ≈ 14 LF/unit
+    : kitBaseLF + Math.round(ba * 3);
   const floorSF = Math.round(sqft * 0.80);
-  const winCount = Math.max(Math.round(sqft / 90), 6);
-  const perimLF = Math.round(Math.sqrt(sqft) * 4 * 1.8);
-  const closetLF = br * 8 + 6;
-  const fans = Math.min(Math.max(Math.round(sqft / 350), 2), br + 2);
-  const dataOut = Math.max(br + 2, 4);
-  const tvOut = Math.max(br + 1, 3);
-  const gfci = Math.round(ba * 2) + 2;
-  const washerQty = Math.max(1, Math.floor(sqft / 3000) + 1);
-  const dwQty = washerQty;
+  const winCount = isApartment
+    ? Math.round(unitCount * 5)    // Cedar Ridge: 830 / 166 ≈ 5/unit
+    : Math.max(Math.round(sqft / 90), 6);
+  const perimLF = isApartment
+    ? Math.round(unitCount * 191)  // Cedar Ridge: 31734 LF / 166 ≈ 191 LF/unit
+    : Math.round(Math.sqrt(sqft) * 4 * 1.8);
+  const closetLF = isApartment
+    ? Math.round(unitCount * 28)   // Cedar Ridge: 4648 LF / 166 ≈ 28 LF/unit
+    : br * 8 + 6;
+  const fans = isApartment ? 0 : Math.min(Math.max(Math.round(sqft / 350), 2), br + 2);
+  const dataOut = isApartment
+    ? Math.round(unitCount * 2)    // Cedar Ridge: 332 / 166 = 2/unit
+    : Math.max(br + 2, 4);
+  const tvOut = isApartment
+    ? Math.round(unitCount * 3)    // Cedar Ridge: 498 / 166 = 3/unit
+    : Math.max(br + 1, 3);
+  const gfci = isApartment ? 0 : Math.round(ba * 2) + 2;
+  // Apartments have shared laundry (roughly 1 per 2 units)
+  const washerQty = isApartment
+    ? Math.max(1, Math.round(unitCount / 2))
+    : Math.max(1, Math.floor(sqft / 3000) + 1);
+  const dwQty = isApartment ? unitCount : washerQty;
 
   const items = [];
   const add = (cat, ref, qty) => { if (qty > 0) items.push({ category: cat, ...ref, qty }); };
 
-  // Appliances
-  add("Appliances", APPLIANCE_COSTS.range, 1);
-  add("Appliances", APPLIANCE_COSTS.dishwasher, dwQty);
-  add("Appliances", APPLIANCE_COSTS.garbage_disposal, 1);
-  add("Appliances", APPLIANCE_COSTS.microwave, 1);
-  add("Appliances", APPLIANCE_COSTS.refrigerator, 1);
+  // Appliances — apartments scale per unit
+  const applQty = isApartment ? unitCount : 1;
+  add("Appliances", APPLIANCE_COSTS.range, applQty);
+  add("Appliances", APPLIANCE_COSTS.dishwasher, isApartment ? unitCount : dwQty);
+  add("Appliances", APPLIANCE_COSTS.garbage_disposal, applQty);
+  add("Appliances", APPLIANCE_COSTS.microwave, applQty);
+  add("Appliances", APPLIANCE_COSTS.refrigerator, applQty);
   add("Appliances", APPLIANCE_COSTS.washer, washerQty);
   add("Appliances", APPLIANCE_COSTS.dryer, washerQty);
 
@@ -127,24 +167,42 @@ export function estimateQuantities(data) {
   }
 
   // Other PP
-  add("Ceiling Fans", OTHER_PP.ceiling_fan, fans);
+  if (!isApartment) {
+    add("Ceiling Fans", OTHER_PP.ceiling_fan, fans);
+  }
   add("Window Treatments", OTHER_PP.window_blind, winCount);
-  add("Decorative Lighting", OTHER_PP.decorative_light, Math.max(2, Math.round(sqft / 600)));
+  add("Decorative Lighting", OTHER_PP.decorative_light, isApartment
+    ? Math.round(unitCount * 2.5)  // Cedar Ridge: 415 / 166 ≈ 2.5/unit
+    : Math.max(2, Math.round(sqft / 600)));
   add("Closet Shelving", OTHER_PP.closet_shelf, closetLF);
   add("Wood Base Moldings", OTHER_PP.base_molding, perimLF);
-  add("Kitchen Sink & Rough-in", OTHER_PP.sink_kitchen, 1);
+  add("Kitchen Sink & Rough-in", OTHER_PP.sink_kitchen, isApartment ? unitCount : 1);
 
   // Electrical
-  add("Special Purpose Electrical", OTHER_PP.appl_outlet, 7);
-  add("Special Purpose Electrical", OTHER_PP.fan_wiring, fans);
-  add("Special Purpose Electrical", OTHER_PP.gfci_outlet, gfci);
+  const elecApplQty = isApartment ? Math.round(unitCount * 7) : 7;
+  add("Special Purpose Electrical", OTHER_PP.appl_outlet, elecApplQty);
+  if (!isApartment) add("Special Purpose Electrical", OTHER_PP.fan_wiring, fans);
+  if (!isApartment) add("Special Purpose Electrical", OTHER_PP.gfci_outlet, gfci);
   add("Special Purpose Electrical", OTHER_PP.phone_data, dataOut);
   add("Special Purpose Electrical", OTHER_PP.coax_tv, tvOut);
 
   // Plumbing
   add("Special Purpose Plumbing", OTHER_PP.washer_hookup, washerQty);
-  add("Special Purpose Plumbing", OTHER_PP.dryer_vent, washerQty);
-  add("Special Purpose Plumbing", OTHER_PP.dw_hookup, dwQty);
+  add("Special Purpose Plumbing", OTHER_PP.dryer_vent, isApartment ? unitCount : washerQty);
+  add("Special Purpose Plumbing", OTHER_PP.dw_hookup, isApartment ? unitCount : dwQty);
+
+  // Apartment-specific items
+  if (isApartment) {
+    add("Mirror", { cost: 131, unit: "EA", desc: "Furniture mirror, framed" }, Math.round(unitCount * 2));
+    add("Millwork", { cost: 7.90, unit: "LF", desc: "Crown & chair rail molding" }, Math.round(unitCount * 24));
+    add("Mailboxes", { cost: 70, unit: "EA", desc: "Residential letter slot" }, unitCount);
+    add("Interior Signage", { cost: 47, unit: "EA", desc: "Room signage per unit" }, unitCount);
+    add("Peephole / Knocker", { cost: 24, unit: "EA", desc: "Door peephole, wide view" }, unitCount);
+    add("Emergency Lighting", { cost: 231, unit: "EA", desc: "Battery-pack emergency light" }, Math.max(4, Math.round(sqft / 7500)));
+    add("Building Flood Lighting", { cost: 430, unit: "EA", desc: "Exterior LED wall pack" }, Math.max(8, Math.round(sqft / 3500)));
+    add("Fitness Equipment", { cost: 5330, unit: "EA", desc: "Fitness center equipment set" }, 1);
+    add("Cable TV System", { cost: 43, unit: "EA", desc: "TV receptacle w/ coax" }, Math.round(unitCount * 3));
+  }
 
   // Fireplaces
   if (data.hasFireplace) {
@@ -166,7 +224,7 @@ export function estimateQuantities(data) {
   }
 
   // Furniture
-  if (isFurn) {
+  if (isFurn && !isApartment) {
     const kings = Math.min(Math.ceil(br / 3), br);
     add("Furniture & FF&E", FURNITURE.bed_king, kings);
     if (br > kings) add("Furniture & FF&E", FURNITURE.bed_queen, br - kings);
@@ -186,25 +244,46 @@ export function estimateQuantities(data) {
   }
 
   // Land improvements
-  if (["single_family", "multifamily"].includes(data.propertyType)) {
-    add("Land Improvements", { ...SITE.asphalt, desc: "Driveway, asphalt" }, 400);
+  if (isApartment) {
+    // Apartment complex: large paved areas, carports, landscaping per Cedar Ridge
+    const parkingSpaces = Math.max(Math.round(unitCount * 1.5), 20);
+    const pavingSF = Math.round(parkingSpaces * 180);  // ~180 SF per space
+    add("Land Improvements", SITE.asphalt, pavingSF);
+    add("Land Improvements", SITE.concrete, Math.round(sqft * 0.25));  // sidewalks
+    add("Land Improvements", SITE.conc_curb, Math.round(pavingSF / 100));
+    add("Land Improvements", SITE.metal_fence, Math.round(Math.sqrt(sqft) * 6));
+    add("Land Improvements", SITE.carport, Math.round(unitCount * 1.0));
+    add("Land Improvements", SITE.landscape, Math.round(sqft * 0.6));
+    add("Land Improvements", SITE.monument_sign, 1);
+    add("Land Improvements", SITE.lot_striping, parkingSpaces);
+    add("Land Improvements", SITE.wheel_stop, parkingSpaces);
+    add("Land Improvements", SITE.playground, 1);
+    add("Land Improvements", SITE.ext_light, Math.max(8, Math.round(sqft / 4000)));
+    add("Land Improvements", SITE.grill, Math.max(2, Math.round(unitCount / 50)));
+    add("Land Improvements", SITE.flagpole, Math.min(5, Math.max(1, Math.round(unitCount / 40))));
+    add("Land Improvements", SITE.storm_swale, Math.round(sqft / 600));
+  } else {
+    if (["single_family", "multifamily"].includes(data.propertyType)) {
+      add("Land Improvements", { ...SITE.asphalt, desc: "Driveway, asphalt" }, 400);
+    }
+    const fenceLF = sqft < 1500 ? 80 : sqft < 3000 ? 120 : 180;
+    add("Land Improvements", SITE.wood_fence, fenceLF);
+    add("Land Improvements", SITE.ext_light, Math.max(2, Math.round(sqft / 500)));
+    add("Land Improvements", SITE.grill, 1);
   }
-  const fenceLF = sqft < 1500 ? 80 : sqft < 3000 ? 120 : 180;
-  add("Land Improvements", SITE.wood_fence, fenceLF);
-  add("Land Improvements", SITE.ext_light, Math.max(2, Math.round(sqft / 500)));
-  add("Land Improvements", SITE.grill, 1);
 
   if (data.hasPool) {
     const pt = data.poolType || "inground_concrete";
     if (pt === "above_ground") add("Land Improvements", SITE.pool_above, 1);
-    else add("Land Improvements", pt === "inground_concrete" ? SITE.pool_conc : SITE.pool_vinyl, 450);
+    else add("Land Improvements", pt === "inground_concrete" ? SITE.pool_conc : SITE.pool_vinyl,
+      isApartment ? Math.max(600, Math.round(unitCount * 8)) : 450);
   }
   if (data.hasDeck) {
     const ds = { small: 200, medium: 500, large: 960 }[data.deckSize] || 500;
     add("Land Improvements", SITE.wood_deck, ds);
   }
-  if (!["single_family", "condo"].includes(data.propertyType) || data.hasPool) {
-    add("Land Improvements", SITE.landscape, Math.round(sqft * 0.3));
+  if (!isApartment && !["single_family", "condo"].includes(data.propertyType) || data.hasPool) {
+    if (!isApartment) add("Land Improvements", SITE.landscape, Math.round(sqft * 0.3));
   }
 
   return items;

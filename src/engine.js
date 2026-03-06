@@ -2,11 +2,13 @@
 // Base profiles calibrated against completed engineering-based cost segregation studies.
 // pp5 = 5-year personal property base %, pp5_furnished = furnished variant
 // li15 = 15-year land improvement base %
+// Apartment profile calibrated against Cedar Ridge (Madison SPECS, Jan 2024):
+//   166 units, 168K SF, $12.925M, PP5=28%, LI15=12%, Building=60%
 export const ALLOCATION_PROFILES = {
   "single_family": { pp5: 0.15, pp5_furnished: 0.22, li15: 0.012, label: "Single Family Rental" },
   "condo":         { pp5: 0.13, pp5_furnished: 0.20, li15: 0.01, label: "Condo / Townhome" },
-  "multifamily":   { pp5: 0.16, pp5_furnished: 0.24, li15: 0.04, label: "Multifamily (2-4 units)" },
-  "apartment":     { pp5: 0.18, pp5_furnished: 0.26, li15: 0.06, label: "Apartment Complex (5+)" },
+  "multifamily":   { pp5: 0.19, pp5_furnished: 0.27, li15: 0.05, label: "Multifamily (2-4 units)" },
+  "apartment":     { pp5: 0.24, pp5_furnished: 0.30, li15: 0.10, label: "Apartment Complex (5+)" },
   "office":        { pp5: 0.15, pp5_furnished: 0.18, li15: 0.08, label: "Office Building" },
   "retail":        { pp5: 0.20, pp5_furnished: 0.23, li15: 0.10, label: "Retail / Strip Mall" },
   "restaurant":    { pp5: 0.35, pp5_furnished: 0.40, li15: 0.08, label: "Restaurant" },
@@ -77,8 +79,10 @@ function getFeatureAdjustments(data, depreciableBasis) {
     pp5Boost += Math.round(depreciableBasis * 0.02);
   }
 
-  // Pool — scaled by pool type. Real study: $131K pool on $957K basis (13.7%)
-  // In-ground concrete ~10-14%, in-ground vinyl ~5-8%, above-ground ~1-2%
+  // Pool — scaled by pool type and property size
+  // SFR ($500K-$1M): pool is 10-14% of basis
+  // Apartment ($10M+): pool is <1% of basis (Cedar Ridge: $81K / $11M = 0.74%)
+  // Scale pool rate inversely with basis size
   if (data.hasPool) {
     const poolRates = {
       "inground_concrete": 0.10,
@@ -86,7 +90,13 @@ function getFeatureAdjustments(data, depreciableBasis) {
       "above_ground": 0.015,
       "default": 0.06,
     };
-    const poolRate = poolRates[data.poolType] || poolRates["default"];
+    let poolRate = poolRates[data.poolType] || poolRates["default"];
+    // For large properties, pool is a fixed cost (~$80-160K), not a % of basis
+    // Scale down: at $1M basis use full rate, at $10M use 1/5th
+    if (depreciableBasis > 1000000) {
+      const scaleFactor = Math.min(1.0, 1000000 / depreciableBasis);
+      poolRate = poolRate * scaleFactor;
+    }
     li15Boost += Math.round(depreciableBasis * poolRate);
   }
 
@@ -102,7 +112,7 @@ function getFeatureAdjustments(data, depreciableBasis) {
 }
 
 // ─── COMPONENT BREAKDOWNS ────────────────────────────────────────────────────
-// Rebalanced against 6 real cost segregation studies.
+// Rebalanced against 7 real cost segregation studies including Cedar Ridge (166-unit apartment).
 // Removable floor coverings raised to match real data (30-46% of 5-year bucket).
 
 // Unfurnished residential — structural-adjacent personal property only
@@ -122,6 +132,33 @@ const RESIDENTIAL_5YR_UNFURNISHED = [
   { name: "Closet Rod / Shelving", pct: 0.02 },
   { name: "Wood Base Moldings", pct: 0.02 },
   { name: "Telephone & Data Systems", pct: 0.01 },
+];
+
+// Apartment complex (5+ units) — calibrated from Cedar Ridge WP 220
+// Flooring dominates (31.5%), cabinets (21.1%), appliances (17.9%), countertops (9.7%)
+const APARTMENT_5YR_COMPONENTS = [
+  { name: "Floating Wood / Vinyl Floors", pct: 0.315 },
+  { name: "Kitchen Cabinetry", pct: 0.211 },
+  { name: "Appliances (Residential)", pct: 0.179 },
+  { name: "Kitchen Countertops", pct: 0.097 },
+  { name: "Sink & Rough-in", pct: 0.051 },
+  { name: "Special Purpose Electrical", pct: 0.041 },
+  { name: "Window Treatments", pct: 0.028 },
+  { name: "Wood Base Moldings", pct: 0.016 },
+  { name: "Mirror", pct: 0.007 },
+  { name: "Millwork (Crown, Chair Rail)", pct: 0.005 },
+  { name: "Closet Rod / Shelving", pct: 0.013 },
+  { name: "Special Purpose Plumbing", pct: 0.012 },
+  { name: "Decorative Lighting", pct: 0.006 },
+  { name: "Dryer Vent Kit", pct: 0.002 },
+  { name: "Cable TV System", pct: 0.003 },
+  { name: "Telephone & Data Systems", pct: 0.002 },
+  { name: "Mailboxes", pct: 0.002 },
+  { name: "Interior Signage", pct: 0.001 },
+  { name: "Peephole / Knocker", pct: 0.001 },
+  { name: "Emergency Lighting", pct: 0.001 },
+  { name: "Building-Mounted Flood Lighting", pct: 0.003 },
+  { name: "Fitness Equipment", pct: 0.003 },
 ];
 
 // Furnished residential — furniture dominates at ~35% of 5-year total
@@ -162,19 +199,24 @@ const COMMERCIAL_5YR_COMPONENTS = [
   { name: "Furniture & Fixtures", pct: 0.03 },
 ];
 
-// Land improvements — reduced base weights for residential, conditional on features
+// Land improvements — enhanced with apartment-specific items from Cedar Ridge study
+// Carport, playground, monument sign, wheel stops, pavement markings, storm drainage
 const LAND_IMPROVEMENT_COMPONENTS = [
-  { name: "Asphalt Paving / Driveway", pct: 0.25, condition: () => true },
-  { name: "Fencing", pct: 0.12, condition: () => true },
-  { name: "Site FF&E (Grills, Outdoor Equipment)", pct: 0.08, condition: () => true },
-  { name: "Landscaping & Irrigation", pct: 0.12, condition: (d) => !["single_family", "condo"].includes(d.propertyType) || d.hasPool },
+  { name: "Asphalt Paving / Driveway", pct: 0.20, condition: () => true },
+  { name: "Fencing", pct: 0.10, condition: () => true },
+  { name: "Site FF&E (Grills, Outdoor Equipment)", pct: 0.06, condition: () => true },
+  { name: "Landscaping & Irrigation", pct: 0.10, condition: (d) => !["single_family", "condo"].includes(d.propertyType) || d.hasPool },
   { name: "Concrete Paving / Sidewalks", pct: 0.08, condition: (d) => !["single_family", "condo"].includes(d.propertyType) },
-  { name: "Exterior Lighting", pct: 0.05, condition: () => true },
-  { name: "Parking Lot / Paving", pct: 0.15, condition: (d) => !["single_family", "condo"].includes(d.propertyType) },
+  { name: "Exterior Lighting", pct: 0.04, condition: () => true },
+  { name: "Parking Lot / Paving", pct: 0.12, condition: (d) => !["single_family", "condo"].includes(d.propertyType) },
+  { name: "Carport / Covered Parking", pct: 0.18, condition: (d) => ["apartment", "multifamily"].includes(d.propertyType) },
+  { name: "Pavement Markings / Wheel Stops", pct: 0.03, condition: (d) => ["apartment", "office", "retail", "industrial"].includes(d.propertyType) },
+  { name: "Monument / Exterior Signage", pct: 0.02, condition: (d) => !["single_family", "condo"].includes(d.propertyType) },
+  { name: "Playground Equipment", pct: 0.02, condition: (d) => ["apartment", "multifamily"].includes(d.propertyType) },
+  { name: "Storm Water / Drainage Systems", pct: 0.03, condition: (d) => !["single_family", "condo"].includes(d.propertyType) },
   { name: "Swimming Pool", pct: 0.30, condition: (d) => d.hasPool },
   { name: "Deck / Porch", pct: 0.25, condition: (d) => d.hasDeck },
-  { name: "Retaining Walls", pct: 0.05, condition: (d) => !["single_family", "condo"].includes(d.propertyType) },
-  { name: "Drainage Systems", pct: 0.05, condition: (d) => !["single_family", "condo"].includes(d.propertyType) },
+  { name: "Concrete Curbing", pct: 0.02, condition: (d) => ["apartment", "office", "retail"].includes(d.propertyType) },
 ];
 
 // ─── BONUS DEPRECIATION SCHEDULE ─────────────────────────────────────────────
@@ -208,8 +250,17 @@ export function runCostSegAnalysis(data) {
   // Select base 5-year rate based on furnished status
   const basePP5 = isFurnished ? profile.pp5_furnished : profile.pp5;
 
-  // Calculate adjusted percentages — flooring and renovation now factor in
-  let pp5Pct = Math.min(basePP5 * ageMult * gradeMult * flooringMult * renoMult, 0.50);
+  // For apartments, dampen adjustment multipliers — quantities scale by unit count
+  // so age/grade/flooring have less marginal impact on the overall allocation %
+  const isApartment = data.propertyType === "apartment";
+  const dampFactor = isApartment ? 0.5 : 1.0;  // half-weight adjustments for apartments
+  const effAgeMult = 1.0 + (ageMult - 1.0) * dampFactor;
+  const effGradeMult = 1.0 + (gradeMult - 1.0) * dampFactor;
+  const effFloorMult = 1.0 + (flooringMult - 1.0) * dampFactor;
+  const effRenoMult = 1.0 + (renoMult - 1.0) * dampFactor;
+
+  // Calculate adjusted percentages
+  let pp5Pct = Math.min(basePP5 * effAgeMult * effGradeMult * effFloorMult * effRenoMult, 0.50);
   let li15Pct = Math.min(profile.li15 * ageMult, 0.35);
 
   // Base allocations
@@ -235,7 +286,9 @@ export function runCostSegAnalysis(data) {
 
   // Component breakdowns — select list based on property type and furnished status
   let componentList;
-  if (isResidential) {
+  if (data.propertyType === "apartment") {
+    componentList = isFurnished ? RESIDENTIAL_5YR_FURNISHED : APARTMENT_5YR_COMPONENTS;
+  } else if (isResidential) {
     componentList = isFurnished ? RESIDENTIAL_5YR_FURNISHED : RESIDENTIAL_5YR_UNFURNISHED;
   } else {
     componentList = COMMERCIAL_5YR_COMPONENTS;
