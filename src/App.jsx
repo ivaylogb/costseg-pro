@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { runCostSegAnalysis } from './engine';
-import { computeUnitCostBreakdown, applyAllocationFactor } from './unitCosts';
+import { computeUnitCostBreakdown } from './unitCosts';
 import { validateForm, getWarnings } from './validation';
 import { generateDepreciationSchedule } from './depreciationSchedule';
 import { colors, btnPrimary, btnSecondary } from './theme';
@@ -64,8 +64,7 @@ export default function App() {
 
   const handleSubmit = () => {
     const r = runCostSegAnalysis(formData);
-    const breakdown = computeUnitCostBreakdown(formData, r.depreciableBasis);
-    const detail = applyAllocationFactor(breakdown, r.pp5Total, r.li15Total);
+    const detail = computeUnitCostBreakdown(formData, r.depreciableBasis);
     const schedule = generateDepreciationSchedule(r, formData);
     setResults(r);
     setUnitCostDetail(detail);

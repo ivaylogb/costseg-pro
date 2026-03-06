@@ -249,16 +249,16 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
                     </td>
                     {(() => {
                       const rows = depSchedule.slice(0, showFullSchedule ? undefined : 10);
-                      const sum = (fn) => rows.reduce((s, r) => s + fn(r), 0);
+                      const sum = (fn) => rows.reduce((s, row) => s + fn(row), 0);
                       return (
                         <>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(r => r.dep5yr))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.gold }}>{fmt(sum(r => r.dep15yr))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.blue }}>{fmt(sum(r => r.depBuilding))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}>{fmt(sum(r => r.totalCS))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.textMuted }}>{fmt(sum(r => r.totalNoCS))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(r => r.benefit))}</td>
-                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(r => r.taxSavings))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(row => row.dep5yr))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.gold }}>{fmt(sum(row => row.dep15yr))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.blue }}>{fmt(sum(row => row.depBuilding))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}>{fmt(sum(row => row.totalCS))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.textMuted }}>{fmt(sum(row => row.totalNoCS))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(row => row.benefit))}</td>
+                          <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(sum(row => row.taxSavings))}</td>
                         </>
                       );
                     })()}

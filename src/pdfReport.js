@@ -254,17 +254,17 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
     y = 50;
 
     y = sectionHeading(y, '5-Year Personal Property \u2014 Segregated Cost Detail');
-    y = bodyText(y, 'Items classified as IRC Section 1245 personal property. Quantities estimated from property characteristics. Unit costs reference industry construction cost data. Indirect costs: ' + Math.round(unitCostDetail.indirectRate * 100) + '%. Allocation factor: ' + unitCostDetail.allocationFactor5 + 'x.', { size: 8.5, color: C.muted });
+    y = bodyText(y, 'Items classified as IRC Section 1245 personal property. Quantities estimated from property characteristics. Unit costs reference industry construction cost data. Indirect costs: ' + Math.round(unitCostDetail.indirectRate * 100) + '%. Allocation factor: ' + unitCostDetail.allocFactor + 'x.', { size: 8.5, color: C.muted });
     y += 4;
 
-    const rows5 = unitCostDetail.items5yr.map(item => [
-      item.description,
+    const rows5 = unitCostDetail.pp5Items.map(item => [
+      item.desc,
       item.qty + ' ' + item.unit,
-      '$' + item.unitCost.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      '$' + item.cost.toLocaleString('en-US', { minimumFractionDigits: 2 }),
       fmt(item.baseCost),
       fmt(item.allocatedCost),
     ]);
-    const total5 = unitCostDetail.items5yr.reduce((s, i) => s + i.allocatedCost, 0);
+    const total5 = unitCostDetail.pp5Total;
 
     doc.autoTable({
       startY: y,
@@ -283,15 +283,15 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
     if (y > pageH - 250) { addFooter(); doc.addPage(); doc.setFillColor(...C.primary); doc.rect(0, 0, pageW, 8, 'F'); y = 50; }
 
     y = sectionHeading(y, '15-Year Land Improvements \u2014 Segregated Cost Detail');
-    y = bodyText(y, 'Items classified under Asset Class 00.3 of Rev. Proc. 87-56. Allocation factor: ' + unitCostDetail.allocationFactor15 + 'x.', { size: 8.5, color: C.muted });
+    y = bodyText(y, 'Items classified under Asset Class 00.3 of Rev. Proc. 87-56. Allocation factor: ' + unitCostDetail.allocFactor + 'x.', { size: 8.5, color: C.muted });
     y += 4;
 
-    const rows15 = unitCostDetail.items15yr.map(item => [
-      item.description, item.qty + ' ' + item.unit,
-      '$' + item.unitCost.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+    const rows15 = unitCostDetail.li15Items.map(item => [
+      item.desc, item.qty + ' ' + item.unit,
+      '$' + item.cost.toLocaleString('en-US', { minimumFractionDigits: 2 }),
       fmt(item.baseCost), fmt(item.allocatedCost),
     ]);
-    const total15 = unitCostDetail.items15yr.reduce((s, i) => s + i.allocatedCost, 0);
+    const total15 = unitCostDetail.li15Total;
 
     doc.autoTable({
       startY: y,
