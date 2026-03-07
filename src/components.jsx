@@ -1,11 +1,21 @@
 import { colors, cardStyle, fmt } from './theme';
 
-export function Input({ label, value, onChange, placeholder, type = "text", helper, error }) {
+// Strip $, commas, spaces from pasted numeric values
+function cleanNumeric(val) {
+  if (typeof val !== 'string') return val;
+  return val.replace(/[$,\s]/g, '');
+}
+
+export function Input({ label, value, onChange, placeholder, type = "text", helper, error, numeric }) {
+  const handleChange = (v) => {
+    onChange(numeric ? cleanNumeric(v) : v);
+  };
   return (
     <div>
       <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: error ? colors.red : colors.textDim, marginBottom: 6 }}>{label}</label>
       <input
-        type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        type={numeric ? "text" : type} inputMode={numeric ? "decimal" : undefined}
+        value={value} onChange={e => handleChange(e.target.value)} placeholder={placeholder}
         style={{
           width: "100%", padding: "12px 14px", borderRadius: 10, border: `1.5px solid ${error ? colors.red + "99" : colors.inputBorder}`,
           background: error ? colors.red + "08" : colors.inputBg, color: colors.text, fontSize: 15, outline: "none",

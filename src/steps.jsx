@@ -42,12 +42,12 @@ export function StepPropertyDetails({ formData, update, errors = {} }) {
           <Input label="ZIP" value={formData.zip} onChange={v => update("zip", v)} placeholder="92024" />
         </div>
         <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="Purchase Price ($)" value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder="590000" type="number" error={errors.purchasePrice} />
-          <Input label="Land Value ($)" value={formData.landValue} onChange={v => update("landValue", v)} placeholder="100000" type="number" helper="County assessor or appraisal" error={errors.landValue} />
+          <Input label="Purchase Price ($)" value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder="590000" numeric error={errors.purchasePrice} />
+          <Input label="Land Value ($)" value={formData.landValue} onChange={v => update("landValue", v)} placeholder="100000" numeric helper="County assessor or appraisal" error={errors.landValue} />
         </div>
         <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="Year Built" value={formData.yearBuilt} onChange={v => update("yearBuilt", v)} placeholder="1990" type="number" error={errors.yearBuilt} />
-          <Input label="Year Purchased / Placed in Service" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2024" type="number" error={errors.yearPurchased} />
+          <Input label="Year Built" value={formData.yearBuilt} onChange={v => update("yearBuilt", v)} placeholder="1990" numeric error={errors.yearBuilt} />
+          <Input label="Year Purchased / Placed in Service" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2024" numeric error={errors.yearPurchased} />
         </div>
       </div>
     </div>
@@ -64,7 +64,7 @@ export function StepBuildingInfo({ formData, update, errors = {} }) {
       <p style={subStyle}>These details help us estimate your component allocations more accurately.</p>
       <div style={{ display: "grid", gap: 16, marginTop: 24 }}>
         <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="Square Footage" value={formData.sqft} onChange={v => update("sqft", v)} placeholder="1500" type="number" error={errors.sqft} />
+          <Input label="Square Footage" value={formData.sqft} onChange={v => update("sqft", v)} placeholder="1500" numeric error={errors.sqft} />
           <Select label="Number of Stories" value={formData.stories} onChange={v => update("stories", v)} options={[
             { value: "1", label: "1 Story" }, { value: "2", label: "2 Stories" }, { value: "3", label: "3+ Stories" },
           ]} />
@@ -76,8 +76,8 @@ export function StepBuildingInfo({ formData, update, errors = {} }) {
           { value: "luxury", label: "Luxury / High-End" },
         ]} />
         <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="Bedrooms" value={formData.bedrooms} onChange={v => update("bedrooms", v)} type="number" />
-          <Input label="Bathrooms" value={formData.bathrooms} onChange={v => update("bathrooms", v)} type="number" />
+          <Input label="Bedrooms" value={formData.bedrooms} onChange={v => update("bedrooms", v)} numeric />
+          <Input label="Bathrooms" value={formData.bathrooms} onChange={v => update("bathrooms", v)} numeric />
         </div>
 
         {/* Property Features Section */}
@@ -113,7 +113,7 @@ export function StepBuildingInfo({ formData, update, errors = {} }) {
           </div>
         </div>
 
-        <Input label="Your Marginal Tax Rate (%)" value={formData.taxRate} onChange={v => update("taxRate", v)} placeholder="37" type="number" helper="Federal + state combined rate" error={errors.taxRate} />
+        <Input label="Your Marginal Tax Rate (%)" value={formData.taxRate} onChange={v => update("taxRate", v)} placeholder="37" numeric helper="Federal + state combined rate" error={errors.taxRate} />
 
         {/* ─── Advanced Details Toggle ─── */}
         <div
