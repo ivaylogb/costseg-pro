@@ -44,7 +44,6 @@ export default function App() {
     taxRate: "37",
     // Renovation fields
     hasRenovation: false,
-    renoOver10k: false,
     renoMode: "total",        // "total" or "detailed"
     renoTotalAmount: "",
     renovationItems: [],

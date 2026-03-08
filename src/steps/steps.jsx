@@ -210,7 +210,6 @@ export function StepBuildingInfo({ formData, update, errors = {} }) {
 // ─── RENOVATION SECTION (inline in Building Info step) ──────────────────────
 function RenovationSection({ formData, update }) {
   const hasReno = formData.hasRenovation;
-  const over10k = formData.renoOver10k;
   const mode = formData.renoMode || "total";
 
   return (
@@ -223,24 +222,10 @@ function RenovationSection({ formData, update }) {
         label="Did you do renovations on this property?"
         sub="Kitchen remodel, new flooring, updated bathrooms, etc."
         checked={hasReno}
-        onChange={() => {
-          update("hasRenovation", !hasReno);
-          if (hasReno) { update("renoOver10k", false); }
-        }}
+        onChange={() => update("hasRenovation", !hasReno)}
       />
 
       {hasReno && (
-        <div style={{ marginTop: 10 }}>
-          <Toggle
-            label="Was the total renovation cost at least $10,000?"
-            sub="Cost segregation on renovations under $10K typically isn't worth the complexity"
-            checked={over10k}
-            onChange={() => update("renoOver10k", !over10k)}
-          />
-        </div>
-      )}
-
-      {hasReno && over10k && (
         <div style={{
           marginTop: 14, padding: 18, borderRadius: 12,
           background: `${colors.accent}08`, border: `1px solid ${colors.accent}22`,
@@ -643,7 +628,7 @@ export function StepReview({ formData, warnings = [] }) {
   ];
 
   // Add renovation info to review if present
-  if (formData.hasRenovation && formData.renoOver10k) {
+  if (formData.hasRenovation) {
     const renoItems = formData.renovationItems || [];
     if (formData.renoMode === "detailed" && renoItems.length > 0) {
       const renoTotal = renoItems.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);

@@ -73,7 +73,7 @@ export const INDIRECT_COST_OPTIONS = [
 // Returns { renoPP5, renoLI15, renoRP, renoTotal, renoComponents }
 // These get ADDED to the main purchase analysis results.
 export function computeRenovationAdditions(data) {
-  const hasReno = data.hasRenovation && data.renoOver10k;
+  const hasReno = data.hasRenovation;
   if (!hasReno) return null;
 
   const isDetailed = data.renoMode === "detailed";
