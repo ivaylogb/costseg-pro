@@ -42,6 +42,14 @@ export default function App() {
     bedrooms: "3",
     bathrooms: "2",
     taxRate: "37",
+    // Renovation fields
+    hasRenovation: false,
+    renoOver10k: false,
+    renoMode: "total",        // "total" or "detailed"
+    renoTotalAmount: "",
+    renovationItems: [],
+    renoIndirectType: "gc",
+    renoIndirectCustomRate: "",
   });
 
   const update = (field, value) => {

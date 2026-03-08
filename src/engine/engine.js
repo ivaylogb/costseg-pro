@@ -4,6 +4,9 @@
 // li15 = 15-year land improvement base %
 // Apartment profile calibrated against Cedar Ridge (Madison SPECS, Jan 2024):
 //   166 units, 168K SF, $12.925M, PP5=28%, LI15=12%, Building=60%
+
+import { computeRenovationAdditions } from './renovation';
+
 export const ALLOCATION_PROFILES = {
   "single_family": { pp5: 0.15, pp5_furnished: 0.22, li15: 0.012, label: "Single Family Rental" },
   "condo":         { pp5: 0.13, pp5_furnished: 0.20, li15: 0.01, label: "Condo / Townhome" },
@@ -366,6 +369,47 @@ export function runCostSegAnalysis(data) {
     npvNoCS += (noCsDep * (taxRate / 100)) / Math.pow(1 + discountRate, y);
   }
   const npvBenefit = Math.round(npvCS - npvNoCS);
+
+  // ─── RENOVATION ADDITIONS ───────────────────────────────────────────────────
+  // If user entered renovation data, compute additional accelerated depreciation
+  const reno = computeRenovationAdditions(data);
+  if (reno) {
+    pp5Total += reno.renoPP5;
+    li15Total += reno.renoLI15;
+    const newDepBasis = depreciableBasis + reno.renoTotal;
+    const newBuilding = newDepBasis - pp5Total - li15Total;
+    const newSegregated = pp5Total + li15Total;
+    const renoBonusAmount = Math.round((reno.renoPP5 + reno.renoLI15) * bonusRate);
+
+    // Merge renovation components into the component lists
+    const allPP5 = [...pp5Components, ...reno.renoPP5Components];
+    const allLI15 = [...li15Components, ...reno.renoLI15Components];
+
+    // Recalculate year 1 with renovation
+    const newCsYear1 = (bonusAmount + renoBonusAmount) + Math.round(newBuilding / buildingLife * 0.5);
+    const newNoCsYear1 = Math.round(newDepBasis / buildingLife * 0.5);
+
+    return {
+      purchasePrice, landValue, depreciableBasis: newDepBasis, buildingLife,
+      landPct: ((landValue / purchasePrice) * 100).toFixed(1),
+      pp5Total, pp5Pct: ((pp5Total / newDepBasis) * 100).toFixed(1),
+      li15Total, li15Pct: ((li15Total / newDepBasis) * 100).toFixed(1),
+      buildingTotal: newBuilding, buildingPct: ((newBuilding / newDepBasis) * 100).toFixed(1),
+      segregatedTotal: newSegregated, segregatedPct: ((newSegregated / newDepBasis) * 100).toFixed(1),
+      pp5Components: allPP5, li15Components: allLI15,
+      bonusRate: (bonusRate * 100).toFixed(0),
+      bonusAmount: bonusAmount + renoBonusAmount,
+      csYear1Dep: newCsYear1, noCsYear1Dep: newNoCsYear1,
+      year1Benefit: newCsYear1 - newNoCsYear1,
+      year1TaxSavings: Math.round((newCsYear1 - newNoCsYear1) * (taxRate / 100)),
+      npvBenefit, // TODO: recalculate NPV with reno — using purchase-only for now
+      taxRate,
+      propertyType: profile.label,
+      isResidential, isSTR, isFurnished, yearPurchased,
+      // Renovation details for display
+      renovation: reno,
+    };
+  }
 
   return {
     purchasePrice, landValue, depreciableBasis, buildingLife,

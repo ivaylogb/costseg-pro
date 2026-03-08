@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ALLOCATION_PROFILES } from '../engine/engine';
+import { RENO_CATEGORIES, INDIRECT_COST_OPTIONS } from '../engine/renovation';
 import { colors, cardStyle, headingStyle, subStyle } from '../theme';
 import { Input, Select } from '../components/components';
 
@@ -115,6 +116,9 @@ export function StepBuildingInfo({ formData, update, errors = {} }) {
 
         <Input label="Your Marginal Tax Rate (%)" value={formData.taxRate} onChange={v => update("taxRate", v)} placeholder="37" numeric helper="Federal + state combined rate" error={errors.taxRate} />
 
+        {/* ─── Renovation Section ─── */}
+        <RenovationSection formData={formData} update={update} />
+
         {/* ─── Advanced Details Toggle ─── */}
         <div
           onClick={() => setShowAdvanced(!showAdvanced)}
@@ -203,6 +207,380 @@ export function StepBuildingInfo({ formData, update, errors = {} }) {
   );
 }
 
+// ─── RENOVATION SECTION (inline in Building Info step) ──────────────────────
+function RenovationSection({ formData, update }) {
+  const hasReno = formData.hasRenovation;
+  const over10k = formData.renoOver10k;
+  const mode = formData.renoMode || "total";
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: colors.textDim, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        Renovations
+      </div>
+
+      <Toggle
+        label="Did you do renovations on this property?"
+        sub="Kitchen remodel, new flooring, updated bathrooms, etc."
+        checked={hasReno}
+        onChange={() => {
+          update("hasRenovation", !hasReno);
+          if (hasReno) { update("renoOver10k", false); }
+        }}
+      />
+
+      {hasReno && (
+        <div style={{ marginTop: 10 }}>
+          <Toggle
+            label="Was the total renovation cost at least $10,000?"
+            sub="Cost segregation on renovations under $10K typically isn't worth the complexity"
+            checked={over10k}
+            onChange={() => update("renoOver10k", !over10k)}
+          />
+        </div>
+      )}
+
+      {hasReno && over10k && (
+        <div style={{
+          marginTop: 14, padding: 18, borderRadius: 12,
+          background: `${colors.accent}08`, border: `1px solid ${colors.accent}22`,
+        }}>
+          <div style={{ fontSize: 12, color: colors.accent, fontWeight: 600, marginBottom: 10 }}>
+            How would you like to enter your renovation costs?
+          </div>
+
+          {/* Mode selector */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
+            {[
+              { key: "total", label: "Enter Total", sub: "Quick — we estimate the breakdown" },
+              { key: "detailed", label: "Upload / Enter Budget", sub: "More accurate — you classify items" },
+            ].map(opt => {
+              const sel = mode === opt.key;
+              return (
+                <div
+                  key={opt.key}
+                  onClick={() => update("renoMode", opt.key)}
+                  style={{
+                    padding: "12px 14px", borderRadius: 10, cursor: "pointer",
+                    border: `1.5px solid ${sel ? colors.accent : colors.inputBorder}`,
+                    background: sel ? colors.accentGlow : colors.card,
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <div style={{ fontWeight: 600, fontSize: 13, color: sel ? colors.accent : colors.text }}>{opt.label}</div>
+                  <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>{opt.sub}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {mode === "total" ? (
+            <div>
+              <Input
+                label="Total Renovation Cost ($)"
+                value={formData.renoTotalAmount}
+                onChange={v => update("renoTotalAmount", v)}
+                placeholder="75000"
+                numeric
+                helper="We'll estimate how much qualifies for accelerated depreciation based on typical renovation breakdowns"
+              />
+            </div>
+          ) : (
+            <RenoBudgetDetail formData={formData} update={update} />
+          )}
+
+          {/* Indirect cost selector */}
+          <div style={{ marginTop: 14 }}>
+            <Select
+              label="How was the renovation managed?"
+              value={formData.renoIndirectType || "gc"}
+              onChange={v => update("renoIndirectType", v)}
+              options={INDIRECT_COST_OPTIONS.map(o => ({ value: o.value, label: o.label }))}
+            />
+            {formData.renoIndirectType === "custom" && (
+              <div style={{ marginTop: 8 }}>
+                <Input label="Custom Indirect Rate (%)" value={formData.renoIndirectCustomRate || ""} onChange={v => update("renoIndirectCustomRate", v)} placeholder="15" numeric />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── DETAILED BUDGET ENTRY ──────────────────────────────────────────────────
+function RenoBudgetDetail({ formData, update }) {
+  const items = formData.renovationItems || [];
+  const [activeTab, setActiveTab] = useState("pp5");
+  const [dragOver, setDragOver] = useState(false);
+
+  const addItem = (categoryId, label) => {
+    if (items.find(i => i.categoryId === categoryId)) return;
+    update("renovationItems", [...items, { categoryId, label, amount: "" }]);
+  };
+
+  const updateItem = (categoryId, amount) => {
+    update("renovationItems", items.map(i => i.categoryId === categoryId ? { ...i, amount } : i));
+  };
+
+  const removeItem = (categoryId) => {
+    update("renovationItems", items.filter(i => i.categoryId !== categoryId));
+  };
+
+  const getSectionTotal = (section) => {
+    const ids = new Set(section.map(c => c.id));
+    return items.filter(i => ids.has(i.categoryId)).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+  };
+
+  const grandTotal = items.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+  const pp5Total = getSectionTotal(RENO_CATEGORIES.pp5);
+  const li15Total = getSectionTotal(RENO_CATEGORIES.li15);
+  const rpTotal = getSectionTotal(RENO_CATEGORIES.rp);
+
+  // File upload handler
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if (ext === 'csv') {
+      const text = await file.text();
+      const parsed = parseCSV(text);
+      if (parsed.length > 0) {
+        update("renovationItems", [...items, ...parsed]);
+      }
+    } else if (ext === 'xlsx' || ext === 'xls') {
+      // SheetJS import for Excel
+      try {
+        const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs');
+        const data = await file.arrayBuffer();
+        const wb = XLSX.read(data);
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const parsed = parseSpreadsheetRows(rows);
+        if (parsed.length > 0) {
+          update("renovationItems", [...items, ...parsed]);
+        }
+      } catch (e) {
+        console.error("Excel parse error:", e);
+        alert("Could not parse Excel file. Try saving as CSV instead.");
+      }
+    } else if (ext === 'pdf') {
+      alert("PDF budget parsing coming soon! For now, please enter items manually or use CSV/Excel.");
+    } else {
+      alert("Supported formats: CSV, Excel (.xlsx/.xls), PDF (coming soon)");
+    }
+  };
+
+  const sections = [
+    { key: "pp5", label: "5-Year", color: colors.accent, cats: RENO_CATEGORIES.pp5, total: pp5Total },
+    { key: "li15", label: "15-Year", color: colors.blue || "#3B82F6", cats: RENO_CATEGORIES.li15, total: li15Total },
+    { key: "rp", label: "Building", color: colors.textMuted, cats: RENO_CATEGORIES.rp, total: rpTotal },
+  ];
+
+  const activeSec = sections.find(s => s.key === activeTab);
+
+  return (
+    <div>
+      {/* Upload zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFileUpload(e.dataTransfer.files[0]); }}
+        onClick={() => { const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv,.xlsx,.xls,.pdf'; input.onchange = (e) => handleFileUpload(e.target.files[0]); input.click(); }}
+        style={{
+          padding: "16px", borderRadius: 10, textAlign: "center", cursor: "pointer",
+          border: `2px dashed ${dragOver ? colors.accent : colors.inputBorder}`,
+          background: dragOver ? `${colors.accent}10` : "transparent",
+          transition: "all 0.2s", marginBottom: 14,
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 600, color: dragOver ? colors.accent : colors.textDim }}>
+          Drop a file or click to upload
+        </div>
+        <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 3 }}>
+          CSV, Excel (.xlsx), or PDF — we'll classify items automatically
+        </div>
+      </div>
+
+      <div style={{ fontSize: 11, color: colors.textMuted, textAlign: "center", marginBottom: 14 }}>
+        — or add items manually below —
+      </div>
+
+      {/* Grand total */}
+      {grandTotal > 0 && (
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "10px 14px", borderRadius: 8, marginBottom: 10,
+          background: `${colors.accent}10`, border: `1px solid ${colors.accent}22`,
+        }}>
+          <span style={{ fontSize: 12, color: colors.textDim }}>Budget Total</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: colors.accent }}>
+            ${grandTotal.toLocaleString()}
+          </span>
+        </div>
+      )}
+
+      {/* Allocation bar */}
+      {grandTotal > 0 && (
+        <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden", gap: 2, marginBottom: 12 }}>
+          {pp5Total > 0 && <div style={{ width: `${(pp5Total / grandTotal) * 100}%`, background: colors.accent, borderRadius: 3 }} />}
+          {li15Total > 0 && <div style={{ width: `${(li15Total / grandTotal) * 100}%`, background: colors.blue || "#3B82F6", borderRadius: 3 }} />}
+          {rpTotal > 0 && <div style={{ width: `${(rpTotal / grandTotal) * 100}%`, background: colors.textMuted, borderRadius: 3, opacity: 0.4 }} />}
+        </div>
+      )}
+
+      {/* Section tabs */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
+        {sections.map(s => {
+          const active = activeTab === s.key;
+          return (
+            <button key={s.key} onClick={() => setActiveTab(s.key)} style={{
+              flex: 1, padding: "8px 6px", borderRadius: 8, cursor: "pointer",
+              border: `1px solid ${active ? s.color + "66" : colors.inputBorder}`,
+              background: active ? s.color + "12" : "transparent",
+              color: active ? s.color : colors.textMuted,
+              fontWeight: active ? 700 : 500, fontSize: 11,
+              fontFamily: "inherit", transition: "all 0.15s", textAlign: "center",
+            }}>
+              {s.label}
+              {s.total > 0 && <div style={{ fontSize: 10, opacity: 0.8 }}>${s.total.toLocaleString()}</div>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Available categories */}
+      {activeSec && (() => {
+        const addedIds = new Set(items.map(i => i.categoryId));
+        const available = activeSec.cats.filter(c => !addedIds.has(c.id));
+        return available.length > 0 ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
+            {available.map(cat => (
+              <button key={cat.id} onClick={() => addItem(cat.id, cat.label)} title={cat.help} style={{
+                padding: "5px 10px", borderRadius: 6, cursor: "pointer",
+                border: `1px dashed ${activeSec.color}44`,
+                background: "transparent", color: activeSec.color,
+                fontSize: 11, fontWeight: 500, fontFamily: "inherit",
+              }}>
+                + {cat.label}
+              </button>
+            ))}
+          </div>
+        ) : null;
+      })()}
+
+      {/* Added items */}
+      {activeSec && (
+        <div style={{ display: "grid", gap: 6 }}>
+          {items.filter(i => activeSec.cats.some(c => c.id === i.categoryId)).map(item => (
+            <div key={item.categoryId} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "8px 10px", borderRadius: 8,
+              background: colors.card, border: `1px solid ${colors.cardBorder}`,
+            }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: activeSec.color, flexShrink: 0 }} />
+              <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: colors.text, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {item.label}
+              </div>
+              <input
+                type="text" inputMode="decimal" placeholder="$0"
+                value={item.amount}
+                onChange={(e) => updateItem(item.categoryId, e.target.value.replace(/[$,\s]/g, ""))}
+                style={{
+                  width: 110, padding: "6px 8px", borderRadius: 6, flexShrink: 0,
+                  border: `1px solid ${colors.inputBorder}`, background: colors.bg,
+                  color: colors.text, fontSize: 13, fontWeight: 600,
+                  fontFamily: "inherit", textAlign: "right", outline: "none",
+                }}
+              />
+              <button onClick={() => removeItem(item.categoryId)} style={{
+                width: 24, height: 24, borderRadius: 4, flexShrink: 0,
+                border: `1px solid ${colors.inputBorder}`, background: "transparent",
+                color: colors.textMuted, cursor: "pointer", fontSize: 13, fontFamily: "inherit",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── CSV PARSER ─────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split('\n').map(l => l.split(',').map(c => c.trim().replace(/^["']|["']$/g, '')));
+  if (lines.length < 2) return [];
+
+  // Try to find description and amount columns
+  const header = lines[0].map(h => h.toLowerCase());
+  const descIdx = header.findIndex(h => /desc|item|category|name|work/i.test(h));
+  const amtIdx = header.findIndex(h => /amount|cost|total|price|value/i.test(h));
+
+  if (descIdx === -1 || amtIdx === -1) {
+    // Fallback: assume col 0 = description, col 1 = amount
+    return lines.slice(1).map(row => ({
+      categoryId: classifyDescription(row[0] || ""),
+      label: row[0] || "Unknown",
+      amount: parseFloat((row[1] || "").replace(/[$,]/g, "")) || "",
+    })).filter(i => i.categoryId && i.amount);
+  }
+
+  return lines.slice(1).map(row => ({
+    categoryId: classifyDescription(row[descIdx] || ""),
+    label: row[descIdx] || "Unknown",
+    amount: parseFloat((row[amtIdx] || "").replace(/[$,]/g, "")) || "",
+  })).filter(i => i.categoryId && i.amount);
+}
+
+function parseSpreadsheetRows(rows) {
+  if (rows.length < 2) return [];
+  const header = (rows[0] || []).map(h => String(h).toLowerCase());
+  const descIdx = header.findIndex(h => /desc|item|category|name|work/i.test(h));
+  const amtIdx = header.findIndex(h => /amount|cost|total|price|value/i.test(h));
+
+  const di = descIdx >= 0 ? descIdx : 0;
+  const ai = amtIdx >= 0 ? amtIdx : 1;
+
+  return rows.slice(1).map(row => ({
+    categoryId: classifyDescription(String(row[di] || "")),
+    label: String(row[di] || "Unknown"),
+    amount: parseFloat(String(row[ai] || "").replace(/[$,]/g, "")) || "",
+  })).filter(i => i.categoryId && i.amount);
+}
+
+// ─── AUTO-CLASSIFIER ────────────────────────────────────────────────────────
+// Maps a budget description to the best renovation category ID
+function classifyDescription(desc) {
+  const d = desc.toLowerCase();
+  // 5-year
+  if (/applia|fridge|refriger|oven|range|dishwash|microwave|washer|dryer|disposal/i.test(d)) return "appliances";
+  if (/cabinet|vanity(?!.*count)/i.test(d)) return "cabinetry";
+  if (/counter|granite|quartz|marble|laminate.*top/i.test(d)) return "countertops";
+  if (/floor|carpet|lvt|vinyl.*plank|hardwood|tile.*floor|laminate(?!.*top)/i.test(d)) return "flooring";
+  if (/light|fixture|fan|ceiling.*fan|sconce|pendant|chandel/i.test(d)) return "lighting";
+  if (/blind|shade|curtain|drape|window.*treat/i.test(d)) return "window_treat";
+  if (/mirror/i.test(d)) return "mirrors";
+  if (/furni|desk|chair|table|tv|sofa|bed|couch/i.test(d)) return "ffe";
+  if (/secur|camera|alarm|cctv/i.test(d)) return "security";
+  // 15-year
+  if (/landscap|sod|tree|shrub|mulch|irriga/i.test(d)) return "landscaping";
+  if (/pav|asphalt|sidewalk|driveway|parking|curb|concrete.*walk/i.test(d)) return "paving";
+  if (/fence|fencing|gate/i.test(d)) return "fencing";
+  if (/sign/i.test(d)) return "signage";
+  if (/pool|deck|patio|outdoor.*kit|pergola|gazebo/i.test(d)) return "pool_outdoor";
+  // 27.5-year
+  if (/paint|stain/i.test(d)) return "painting";
+  if (/hvac|furnace|air.*cond|duct|thermostat|heat.*pump/i.test(d)) return "hvac";
+  if (/plumb|pipe|water.*heat|toilet|tub|shower|drain|faucet/i.test(d)) return "plumbing";
+  if (/electr|panel|wiring|outlet|circuit/i.test(d)) return "electrical";
+  if (/roof|shingle|flash|gutter/i.test(d)) return "roofing";
+  if (/frame|framing|drywall|door|window|stair|siding|stucco|exterior/i.test(d)) return "general";
+  // Fallback
+  return "general";
+}
+
 function Toggle({ label, sub, checked, onChange }) {
   return (
     <div
@@ -263,6 +641,19 @@ export function StepReview({ formData, warnings = [] }) {
     ["Primary Flooring", flooringLabels[formData.flooringType] || "Not specified"],
     ["Tax Rate", formData.taxRate + "%"],
   ];
+
+  // Add renovation info to review if present
+  if (formData.hasRenovation && formData.renoOver10k) {
+    const renoItems = formData.renovationItems || [];
+    if (formData.renoMode === "detailed" && renoItems.length > 0) {
+      const renoTotal = renoItems.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+      items.push(["Renovation (Detailed)", `$${renoTotal.toLocaleString()} across ${renoItems.filter(i => parseFloat(i.amount) > 0).length} categories`]);
+    } else if (formData.renoTotalAmount) {
+      items.push(["Renovation (Total)", "$" + parseFloat(formData.renoTotalAmount).toLocaleString()]);
+    }
+    const indirectLabels = { gc: "General Contractor", self_sub: "Self-managed", diy: "DIY", custom: "Custom" };
+    items.push(["Reno Management", indirectLabels[formData.renoIndirectType] || "General Contractor"]);
+  }
   return (
     <div>
       <h2 style={headingStyle}>Review Your Information</h2>
