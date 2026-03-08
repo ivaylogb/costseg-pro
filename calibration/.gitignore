@@ -1,0 +1,9 @@
+# Don't commit actual study PDFs (client-confidential reports)
+studies/**/*.pdf
+studies/**/*.xls
+studies/**/*.xlsx
+
+# Do track benchmarks and reference docs
+!benchmarks/
+!reference/
+!REFERENCE.md

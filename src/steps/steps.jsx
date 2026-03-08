@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ALLOCATION_PROFILES } from './engine';
-import { colors, cardStyle, headingStyle, subStyle } from './theme';
-import { Input, Select } from './components';
+import { ALLOCATION_PROFILES } from '../engine/engine';
+import { colors, cardStyle, headingStyle, subStyle } from '../theme';
+import { Input, Select } from '../components/components';
 
 export function StepPropertyType({ formData, update }) {
   const types = Object.entries(ALLOCATION_PROFILES);

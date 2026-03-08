@@ -1,0 +1,189 @@
+{
+  "version": "2025-03-08",
+  "studies": {
+    "purchase": [
+      {
+        "id": "P1",
+        "name": "Stella (8222 Calmont Ave)",
+        "type": "apartment",
+        "location": "Fort Worth, TX",
+        "units": 200,
+        "sqft": 158130,
+        "yearBuilt": null,
+        "inServiceDate": "2022",
+        "purchasePrice": 15325000,
+        "landValue": 2298750,
+        "depreciableBasis": 13026250,
+        "allocations": {
+          "pp5": { "amount": 2547708, "pct": 0.196 },
+          "pp7": { "amount": 0, "pct": 0 },
+          "li15": { "amount": 801706, "pct": 0.062 },
+          "rp275": { "amount": 9676836, "pct": 0.743 }
+        },
+        "indirectRate": 0.25,
+        "premiumDiscount": 0.90,
+        "firm": "Madison SPECS",
+        "method": "engineering_rcn"
+      },
+      {
+        "id": "P2",
+        "name": "Cypress Edge (1565 N IH 35)",
+        "type": "apartment",
+        "location": "New Braunfels, TX",
+        "units": 148,
+        "sqft": null,
+        "yearBuilt": null,
+        "inServiceDate": "2022",
+        "purchasePrice": 23000000,
+        "landValue": 3450000,
+        "depreciableBasis": 19550000,
+        "allocations": {
+          "pp5": { "amount": 3961976, "pct": 0.203 },
+          "pp7": { "amount": 0, "pct": 0 },
+          "li15": { "amount": 1041745, "pct": 0.053 },
+          "rp275": { "amount": 14546280, "pct": 0.744 }
+        },
+        "indirectRate": 0.25,
+        "premiumDiscount": 1.15,
+        "firm": "Madison SPECS",
+        "method": "engineering_rcn"
+      },
+      {
+        "id": "P3",
+        "name": "3404 Queen Dr SW",
+        "type": "apartment",
+        "location": "Cedar Rapids, IA",
+        "units": 96,
+        "sqft": 88359,
+        "yearBuilt": 1994,
+        "inServiceDate": "2024-12-23",
+        "purchasePrice": 6400000,
+        "landValue": 1193096,
+        "closingCosts": 3050,
+        "depreciableBasis": 5206904,
+        "allocations": {
+          "pp5": { "amount": 1263309, "pct": 0.243 },
+          "pp7": { "amount": 28986, "pct": 0.006 },
+          "li15": { "amount": 245446, "pct": 0.047 },
+          "rp275": { "amount": 3669162, "pct": 0.705 }
+        },
+        "indirectRate": 0.014,
+        "premiumDiscount": 1.014,
+        "firm": "1245 Consulting",
+        "method": "engineering_rcn",
+        "bonusDepreciation": 0.60,
+        "year1Deduction": 1035852,
+        "year1TaxSavings": 383265,
+        "taxRate": 0.37,
+        "fee": 3400,
+        "paybackRatio": 112.7
+      },
+      {
+        "id": "P4",
+        "name": "Osprey Cove South",
+        "type": "mixed_residential",
+        "location": null,
+        "units": 230,
+        "sqft": null,
+        "yearBuilt": null,
+        "inServiceDate": "2019-10-01",
+        "purchasePrice": null,
+        "landValue": null,
+        "depreciableBasis": 5655000,
+        "allocations": {
+          "pp5": { "amount": 1146253, "pct": 0.203 },
+          "pp7": { "amount": 0, "pct": 0 },
+          "pp9": { "amount": 20361, "pct": 0.004, "note": "Church items only" },
+          "li15": { "amount": 632396, "pct": 0.112 },
+          "rp275": { "amount": 3731947, "pct": 0.660 },
+          "rp39": { "amount": 124043, "pct": 0.022, "note": "Church building" }
+        },
+        "indirectRate": null,
+        "premiumDiscount": null,
+        "firm": "unknown",
+        "method": "detailed_line_item",
+        "totalLineItems": 597
+      }
+    ],
+    "renovation": [
+      {
+        "id": "R1",
+        "name": "Stella Phase II Renovation",
+        "type": "apartment_renovation",
+        "location": "Fort Worth, TX",
+        "parentStudy": "P1",
+        "renovationBasis": 1395459,
+        "allocations": {
+          "pp5": { "amount": 512242, "pct": 0.367 },
+          "li15": { "amount": 38763, "pct": 0.028 },
+          "rp275": { "amount": 844454, "pct": 0.605 }
+        },
+        "indirectRate": 0.19,
+        "firm": "Madison SPECS",
+        "method": "invoice",
+        "components": {
+          "pp5": [
+            { "name": "Appliances Residential", "cost": 85973, "allocated": 102007 },
+            { "name": "Cabinetry", "cost": 65681, "allocated": 77930 },
+            { "name": "Countertop", "cost": 53373, "allocated": 63327 },
+            { "name": "Decorative Lighting", "cost": 41807, "allocated": 49604 },
+            { "name": "Vinyl Floors and Base", "cost": 184893, "allocated": 219374 }
+          ],
+          "li15": [
+            { "name": "Asphalt Paving", "cost": 4645, "allocated": 5511 },
+            { "name": "Landscaping", "cost": 7575, "allocated": 8987 },
+            { "name": "Site Signage", "cost": 20451, "allocated": 24265 }
+          ],
+          "rp275": [
+            { "name": "Electrical", "cost": 11446, "allocated": 13580 },
+            { "name": "Finishes (Painting)", "cost": 302668, "allocated": 359113 },
+            { "name": "General Construction", "cost": 329230, "allocated": 390628 },
+            { "name": "HVAC", "cost": 68380, "allocated": 81133 }
+          ]
+        }
+      },
+      {
+        "id": "R2",
+        "name": "Cypress Edge Renovation",
+        "type": "apartment_renovation",
+        "location": "New Braunfels, TX",
+        "parentStudy": "P2",
+        "renovationBasis": 496679,
+        "allocations": {
+          "pp5": { "amount": 183158, "pct": 0.369 },
+          "li15": { "amount": 74797, "pct": 0.151 },
+          "rp275": { "amount": 238724, "pct": 0.481 }
+        },
+        "indirectRate": 0,
+        "firm": "Madison SPECS",
+        "method": "invoice",
+        "components": {
+          "pp5": [
+            { "name": "Appliances Residential", "cost": 46628 },
+            { "name": "Cabinetry", "cost": 32019 },
+            { "name": "Countertop", "cost": 50957 },
+            { "name": "Vinyl Floors and Base", "cost": 41357 },
+            { "name": "Window Treatments", "cost": 4213 },
+            { "name": "FF&E", "cost": 5700 },
+            { "name": "Mirror", "cost": 1943 },
+            { "name": "Ceiling Fan", "cost": 174 },
+            { "name": "Decorative Lighting", "cost": 168 }
+          ],
+          "li15": [
+            { "name": "Landscaping", "cost": 29217 },
+            { "name": "Site Signage", "cost": 45580 }
+          ],
+          "rp275": [
+            { "name": "Finishes", "cost": 102667 },
+            { "name": "HVAC", "cost": 69475 },
+            { "name": "General Construction", "cost": 33330 },
+            { "name": "Thermal and Moisture Protection", "cost": 12135 },
+            { "name": "Plumbing", "cost": 11222 },
+            { "name": "Electrical", "cost": 6293 },
+            { "name": "Openings", "cost": 3602 }
+          ]
+        }
+      }
+    ]
+  }
+}

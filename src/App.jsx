@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { runCostSegAnalysis } from './engine';
-import { computeUnitCostBreakdown } from './unitCosts';
-import { validateForm, getWarnings } from './validation';
-import { generateDepreciationSchedule } from './depreciationSchedule';
+import { runCostSegAnalysis } from './engine/engine';
+import { computeUnitCostBreakdown } from './engine/unitCosts';
+import { validateForm, getWarnings } from './engine/validation';
+import { generateDepreciationSchedule } from './engine/depreciationSchedule';
 import { colors, btnPrimary, btnSecondary } from './theme';
-import { StepPropertyType, StepPropertyDetails, StepBuildingInfo, StepReview } from './steps';
-import { ResultsDashboard } from './Results';
+import { StepPropertyType, StepPropertyDetails, StepBuildingInfo, StepReview } from './steps/steps';
+import { ResultsDashboard } from './pages/Results';
 
 export default function App() {
   const [step, setStep] = useState(0);

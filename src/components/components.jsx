@@ -1,4 +1,4 @@
-import { colors, cardStyle, fmt } from './theme';
+import { colors, cardStyle, fmt } from '../theme';
 
 // Strip $, commas, spaces from pasted numeric values
 function cleanNumeric(val) {

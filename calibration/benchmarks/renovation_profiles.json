@@ -1,0 +1,151 @@
+{
+  "version": "2025-03-08",
+  "renovationClassification": {
+    "description": "Maps common renovation line items to MACRS class lives. Based on analysis of R1 (Stella Reno) and R2 (Cypress Edge Reno) studies.",
+    "categories": {
+      "pp5_personal_property": {
+        "life": 5,
+        "items": [
+          {
+            "category": "Kitchen Appliances",
+            "includes": ["refrigerator", "oven", "range", "dishwasher", "garbage disposal", "microwave", "range hood", "washer", "dryer"],
+            "typicalRenoPct": "10-20%",
+            "notes": "Includes electrical hookups as special purpose electrical"
+          },
+          {
+            "category": "Cabinetry",
+            "includes": ["kitchen cabinets", "bathroom vanity cabinets", "built-in shelving", "closet systems"],
+            "typicalRenoPct": "5-15%",
+            "notes": "Upper and base cabinets. Does NOT include bathroom vanity countertops (separate)."
+          },
+          {
+            "category": "Countertops",
+            "includes": ["kitchen countertops", "bathroom countertops", "laminate", "granite", "quartz", "marble"],
+            "typicalRenoPct": "5-12%"
+          },
+          {
+            "category": "Flooring",
+            "includes": ["carpet", "carpet pad", "LVT", "vinyl plank", "laminate", "hardwood", "tile flooring", "floor base", "trim"],
+            "typicalRenoPct": "15-30%",
+            "notes": "Largest single 5-yr category in most renovations"
+          },
+          {
+            "category": "Decorative Lighting",
+            "includes": ["light fixtures", "ceiling fans", "pendant lights", "sconces", "vanity lighting"],
+            "typicalRenoPct": "2-8%",
+            "notes": "Interior fixtures only. Exterior wall-mounted also qualifies."
+          },
+          {
+            "category": "Window Treatments",
+            "includes": ["blinds", "shades", "curtains", "curtain rods"],
+            "typicalRenoPct": "1-3%"
+          },
+          {
+            "category": "Mirrors",
+            "includes": ["bathroom mirrors", "decorative mirrors", "framed mirrors"],
+            "typicalRenoPct": "1-5%"
+          },
+          {
+            "category": "FF&E / Furniture",
+            "includes": ["furniture", "desks", "chairs", "tables", "bookcases", "file cabinets", "computers", "printers"],
+            "typicalRenoPct": "0-3%",
+            "notes": "Common area / office furniture. Not applicable for most SFR renovations."
+          },
+          {
+            "category": "Security Systems",
+            "includes": ["CCTV cameras", "security cameras", "alarm systems", "access control"],
+            "typicalRenoPct": "0-2%"
+          }
+        ]
+      },
+      "li15_land_improvements": {
+        "life": 15,
+        "items": [
+          {
+            "category": "Landscaping",
+            "includes": ["sod", "seeding", "trees", "shrubs", "mulch", "irrigation", "retaining walls"],
+            "typicalRenoPct": "0-20%"
+          },
+          {
+            "category": "Paving & Parking",
+            "includes": ["asphalt", "concrete sidewalks", "parking lot", "curbing", "striping"],
+            "typicalRenoPct": "0-10%"
+          },
+          {
+            "category": "Fencing",
+            "includes": ["wood fence", "chain link", "decorative metal", "gates"],
+            "typicalRenoPct": "0-5%"
+          },
+          {
+            "category": "Signage",
+            "includes": ["monument sign", "property sign", "directional signs"],
+            "typicalRenoPct": "0-10%",
+            "notes": "Can be large for apartment rebranding projects"
+          },
+          {
+            "category": "Pool & Outdoor Amenities",
+            "includes": ["pool resurfacing", "pool equipment", "splash pad", "playground", "outdoor kitchen", "grills"],
+            "typicalRenoPct": "0-8%"
+          }
+        ]
+      },
+      "rp_building": {
+        "life_residential": 27.5,
+        "life_commercial": 39,
+        "items": [
+          {
+            "category": "Painting",
+            "includes": ["interior painting", "exterior painting", "staining", "wallpaper"],
+            "typicalRenoPct": "15-30%",
+            "notes": "Often the single largest building cost in apartment renovations"
+          },
+          {
+            "category": "HVAC",
+            "includes": ["HVAC replacement", "furnace", "AC unit", "ductwork", "thermostat"],
+            "typicalRenoPct": "5-15%"
+          },
+          {
+            "category": "Plumbing",
+            "includes": ["pipe replacement", "water heater", "toilet", "tub", "shower", "drain repair"],
+            "typicalRenoPct": "3-10%",
+            "notes": "Sinks classified as 5-yr when they include rough-in. Standalone pipe work is 27.5-yr."
+          },
+          {
+            "category": "Electrical",
+            "includes": ["panel upgrade", "rewiring", "outlet installation", "code compliance"],
+            "typicalRenoPct": "2-8%",
+            "notes": "General electrical is building. Special purpose electrical for appliances is 5-yr."
+          },
+          {
+            "category": "Roofing",
+            "includes": ["roof replacement", "shingles", "flashing", "gutters"],
+            "typicalRenoPct": "0-15%"
+          },
+          {
+            "category": "General Construction",
+            "includes": ["framing", "drywall", "doors", "windows", "exterior repairs", "stair repair"],
+            "typicalRenoPct": "10-25%"
+          }
+        ]
+      }
+    }
+  },
+  "indirectCostDefaults": {
+    "withGeneralContractor": {
+      "rate": 0.15,
+      "range": [0.12, 0.20],
+      "note": "GC overhead, permits, insurance, project management"
+    },
+    "selfManagedSubs": {
+      "rate": 0.08,
+      "range": [0.05, 0.12],
+      "note": "Owner coordinates subs directly"
+    },
+    "materialsOnly": {
+      "rate": 0,
+      "note": "DIY labor, materials purchased directly"
+    }
+  },
+  "minimumThreshold": 10000,
+  "sfr_renovation_notes": "SFR renovations follow same classification rules but typically have higher 5-yr percentages (40-50%) because SFR renovations are more interior-focused (kitchen, bath, flooring) and less likely to include exterior/site work."
+}

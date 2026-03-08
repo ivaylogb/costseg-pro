@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
-import Landing from './Landing.jsx'
+import Landing from './pages/Landing.jsx'
 
 function Router() {
   const [route, setRoute] = useState(window.location.hash)

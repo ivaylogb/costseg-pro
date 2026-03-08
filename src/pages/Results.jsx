@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { colors, cardStyle, btnSecondary, btnPrimary, fmt } from './theme';
-import { StatCard, AllocRow, ComponentTable } from './components';
-import { generatePDF } from './pdfReport';
+import { colors, cardStyle, btnSecondary, btnPrimary, fmt } from '../theme';
+import { StatCard, AllocRow, ComponentTable } from '../components/components';
+import { generatePDF } from '../pdf/pdfReport';
 
 export function ResultsDashboard({ results: r, formData, unitCostDetail, depSchedule, photos = [], onBack }) {
   const [showFullSchedule, setShowFullSchedule] = useState(false);
