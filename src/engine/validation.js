@@ -9,8 +9,8 @@ function clean(v) {
 export function validateForm(data, step) {
   const errors = {};
 
-  if (step >= 1) {
-    // Step 1: Property Details
+  if (step >= 0) {
+    // Step 0: Property (address, type, price, land, years)
     const price = parseFloat(clean(data.purchasePrice));
     if (!data.purchasePrice || isNaN(price) || price <= 0) {
       errors.purchasePrice = "Enter a purchase price (e.g. 590000)";
@@ -46,8 +46,8 @@ export function validateForm(data, step) {
     }
   }
 
-  if (step >= 2) {
-    // Step 2: Building Info
+  if (step >= 1) {
+    // Step 1: Building Info
     const sqft = parseFloat(clean(data.sqft));
     if (!data.sqft || isNaN(sqft) || sqft <= 0) {
       errors.sqft = "Enter the building's total square footage";

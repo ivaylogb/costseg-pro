@@ -1,17 +1,66 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ALLOCATION_PROFILES } from '../engine/engine';
 import { RENO_CATEGORIES, INDIRECT_COST_OPTIONS } from '../engine/renovation';
+import { estimateLandValue } from '../engine/landEstimator';
 import { colors, cardStyle, headingStyle, subStyle } from '../theme';
 import { Input, Select } from '../components/components';
 
-export function StepPropertyType({ formData, update }) {
-  const types = Object.entries(ALLOCATION_PROFILES);
+// ─── ALLOWED PROPERTY TYPES (residential only for now) ──────────────────────
+const ALLOWED_TYPES = [
+  { key: "single_family", label: "Single Family Rental", sub: "Houses, duplexes, vacation rentals" },
+  { key: "condo", label: "Condo / Townhome", sub: "Condos, townhouses, co-ops" },
+];
+
+// ─── COMBINED STEP: Address → Type → Price + Land ───────────────────────────
+export function StepProperty({ formData, update, errors = {} }) {
+  const [landEstimate, setLandEstimate] = useState(null);
+  const [userOverrodeLand, setUserOverrodeLand] = useState(false);
+
+  useEffect(() => {
+    const price = parseFloat((formData.purchasePrice || "").replace(/[$,\s]/g, ""));
+    if (price > 0 && (formData.state || formData.zip)) {
+      const est = estimateLandValue(price, formData.state, formData.zip);
+      setLandEstimate(est);
+      if (est && !userOverrodeLand && !formData.landValue) {
+        update("landValue", String(est.landValue));
+      }
+    } else {
+      setLandEstimate(null);
+    }
+  }, [formData.purchasePrice, formData.state, formData.zip]);
+
+  const handleLandChange = (v) => { setUserOverrodeLand(true); update("landValue", v); };
+  const applyEstimate = () => { if (landEstimate) { update("landValue", String(landEstimate.landValue)); setUserOverrodeLand(false); } };
+
+  const sectionLabel = (text) => (
+    <div style={{ fontSize: 12, fontWeight: 700, color: colors.textDim, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 28, marginBottom: 12, paddingBottom: 8, borderBottom: `1px solid ${colors.cardBorder}` }}>
+      {text}
+    </div>
+  );
+
+  const price = parseFloat((formData.purchasePrice || "").replace(/[$,\s]/g, ""));
+  const hasPrice = price > 0;
+
   return (
     <div>
-      <h2 style={headingStyle}>What type of property is this?</h2>
-      <p style={subStyle}>Select the property type that best matches your investment.</p>
-      <div className="csp-property-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10, marginTop: 24 }}>
-        {types.map(([key, val]) => {
+      <h2 style={headingStyle}>Your Property</h2>
+      <p style={subStyle}>Tell us about your property and we'll estimate your cost segregation benefit.</p>
+
+      {/* ── Address ── */}
+      {sectionLabel("Property Address")}
+      <div style={{ display: "grid", gap: 12 }}>
+        <Input label="Street Address" value={formData.address} onChange={v => update("address", v)} placeholder="123 Main St" error={errors.address} />
+        <div className="csp-form-grid-3" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 12 }}>
+          <Input label="City" value={formData.city} onChange={v => update("city", v)} placeholder="San Diego" />
+          <Input label="State" value={formData.state} onChange={v => update("state", v)} placeholder="CA" />
+          <Input label="ZIP" value={formData.zip} onChange={v => update("zip", v)} placeholder="92024" />
+        </div>
+      </div>
+
+      {/* ── Property Type ── */}
+      {sectionLabel("Property Type")}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {ALLOWED_TYPES.map(({ key, label, sub }) => {
           const sel = formData.propertyType === key;
           return (
             <div key={key} onClick={() => update("propertyType", key)} style={{
@@ -20,40 +69,100 @@ export function StepPropertyType({ formData, update }) {
               background: sel ? colors.accentGlow : colors.card,
               transition: "all 0.15s",
             }}>
-              <div style={{ fontWeight: 600, fontSize: 14, color: sel ? colors.accent : colors.text }}>{val.label}</div>
+              <div style={{ fontWeight: 600, fontSize: 14, color: sel ? colors.accent : colors.text }}>{label}</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 3 }}>{sub}</div>
             </div>
           );
         })}
+      </div>
+
+      {/* ── Purchase & Land Value ── */}
+      {sectionLabel("Purchase Details")}
+      <div style={{ display: "grid", gap: 14 }}>
+        <div className="csp-form-grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+          <Input label="Purchase Price ($)" value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder="590,000" numeric error={errors.purchasePrice} />
+          <Input label="Year Built" value={formData.yearBuilt} onChange={v => update("yearBuilt", v)} placeholder="1990" numeric error={errors.yearBuilt} />
+          <Input label="Year Purchased" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2024" numeric error={errors.yearPurchased} />
+        </div>
+
+        {/* Land Value Estimate Card */}
+        {!hasPrice ? (
+          <div style={{
+            padding: "16px 18px", borderRadius: 12, textAlign: "center",
+            border: `1px dashed ${colors.inputBorder}`, color: colors.textMuted, fontSize: 13,
+          }}>
+            Enter your purchase price to get a land value estimate
+          </div>
+        ) : (
+          <div style={{
+            padding: "18px 20px", borderRadius: 14,
+            background: landEstimate ? `${colors.blue || "#3B82F6"}08` : colors.card,
+            border: `1.5px solid ${landEstimate ? (colors.blue || "#3B82F6") + "33" : colors.inputBorder}`,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: colors.textDim }}>Land Value</div>
+                {landEstimate && !userOverrodeLand && (
+                  <div style={{ fontSize: 11, color: colors.blue || "#3B82F6", marginTop: 2 }}>
+                    Auto-estimated from {landEstimate.source}
+                  </div>
+                )}
+              </div>
+              {landEstimate && (
+                <div style={{
+                  padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                  background: `${colors.blue || "#3B82F6"}15`, color: colors.blue || "#3B82F6",
+                }}>
+                  {landEstimate.landSharePct}% of price
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <input
+                  type="text" inputMode="decimal"
+                  value={formData.landValue}
+                  onChange={(e) => handleLandChange(e.target.value.replace(/[$,\s]/g, ""))}
+                  placeholder={landEstimate ? `${landEstimate.landValue.toLocaleString()}` : "100000"}
+                  style={{
+                    width: "100%", padding: "12px 14px", borderRadius: 10, fontSize: 18, fontWeight: 700,
+                    border: `1.5px solid ${errors.landValue ? (colors.red || "#EF4444") : colors.inputBorder}`,
+                    background: colors.inputBg || colors.bg, color: colors.text,
+                    fontFamily: "inherit", outline: "none",
+                  }}
+                />
+                {errors.landValue && (
+                  <div style={{ fontSize: 11, color: colors.red || "#EF4444", marginTop: 4 }}>{errors.landValue}</div>
+                )}
+              </div>
+              {landEstimate && userOverrodeLand && formData.landValue !== String(landEstimate.landValue) && (
+                <button onClick={applyEstimate} style={{
+                  padding: "10px 16px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  background: `${colors.blue || "#3B82F6"}15`, border: `1px solid ${colors.blue || "#3B82F6"}44`,
+                  color: colors.blue || "#3B82F6", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+                }}>
+                  Use estimate
+                </button>
+              )}
+            </div>
+
+            <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 8, lineHeight: 1.5 }}>
+              {landEstimate
+                ? "Based on FHFA residential land data. For the most accurate value, check your county tax assessor's land/improvement split on your property tax bill."
+                : "Enter your state or ZIP above for an automatic estimate, or enter the value from your county tax assessor."
+              }
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-export function StepPropertyDetails({ formData, update, errors = {} }) {
-  return (
-    <div>
-      <h2 style={headingStyle}>Property & Purchase Details</h2>
-      <p style={subStyle}>Enter the financial details of your property acquisition.</p>
-      <div style={{ display: "grid", gap: 16, marginTop: 24 }}>
-        <Input label="Property Name (optional)" value={formData.propertyName} onChange={v => update("propertyName", v)} placeholder="e.g. Oak Street Rental" />
-        <Input label="Property Address" value={formData.address} onChange={v => update("address", v)} placeholder="123 Main St" />
-        <div className="csp-form-grid-3" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 12 }}>
-          <Input label="City" value={formData.city} onChange={v => update("city", v)} placeholder="San Diego" />
-          <Input label="State" value={formData.state} onChange={v => update("state", v)} placeholder="CA" />
-          <Input label="ZIP" value={formData.zip} onChange={v => update("zip", v)} placeholder="92024" />
-        </div>
-        <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="Purchase Price ($)" value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder="590000" numeric error={errors.purchasePrice} />
-          <Input label="Land Value ($)" value={formData.landValue} onChange={v => update("landValue", v)} placeholder="100000" numeric helper="County assessor or appraisal" error={errors.landValue} />
-        </div>
-        <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="Year Built" value={formData.yearBuilt} onChange={v => update("yearBuilt", v)} placeholder="1990" numeric error={errors.yearBuilt} />
-          <Input label="Year Purchased / Placed in Service" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2024" numeric error={errors.yearPurchased} />
-        </div>
-      </div>
-    </div>
-  );
-}
+// Backward-compatible exports (App.jsx may still reference these)
+export const StepPropertyType = StepProperty;
+export const StepPropertyDetails = StepProperty;
 
 export function StepBuildingInfo({ formData, update, errors = {} }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -210,6 +319,7 @@ export function StepBuildingInfo({ formData, update, errors = {} }) {
 // ─── RENOVATION SECTION (inline in Building Info step) ──────────────────────
 function RenovationSection({ formData, update }) {
   const hasReno = formData.hasRenovation;
+  const over10k = formData.renoOver10k;
   const mode = formData.renoMode || "total";
 
   return (
@@ -222,10 +332,24 @@ function RenovationSection({ formData, update }) {
         label="Did you do renovations on this property?"
         sub="Kitchen remodel, new flooring, updated bathrooms, etc."
         checked={hasReno}
-        onChange={() => update("hasRenovation", !hasReno)}
+        onChange={() => {
+          update("hasRenovation", !hasReno);
+          if (hasReno) { update("renoOver10k", false); }
+        }}
       />
 
       {hasReno && (
+        <div style={{ marginTop: 10 }}>
+          <Toggle
+            label="Was the total renovation cost at least $10,000?"
+            sub="Cost segregation on renovations under $10K typically isn't worth the complexity"
+            checked={over10k}
+            onChange={() => update("renoOver10k", !over10k)}
+          />
+        </div>
+      )}
+
+      {hasReno && over10k && (
         <div style={{
           marginTop: 14, padding: 18, borderRadius: 12,
           background: `${colors.accent}08`, border: `1px solid ${colors.accent}22`,
@@ -628,7 +752,7 @@ export function StepReview({ formData, warnings = [] }) {
   ];
 
   // Add renovation info to review if present
-  if (formData.hasRenovation) {
+  if (formData.hasRenovation && formData.renoOver10k) {
     const renoItems = formData.renovationItems || [];
     if (formData.renoMode === "detailed" && renoItems.length > 0) {
       const renoTotal = renoItems.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);

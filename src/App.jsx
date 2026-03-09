@@ -4,7 +4,7 @@ import { computeUnitCostBreakdown } from './engine/unitCosts';
 import { validateForm, getWarnings } from './engine/validation';
 import { generateDepreciationSchedule } from './engine/depreciationSchedule';
 import { colors, btnPrimary, btnSecondary } from './theme';
-import { StepPropertyType, StepPropertyDetails, StepBuildingInfo, StepReview } from './steps/steps';
+import { StepProperty, StepBuildingInfo, StepReview } from './steps/steps';
 import { ResultsDashboard } from './pages/Results';
 
 export default function App() {
@@ -44,6 +44,7 @@ export default function App() {
     taxRate: "37",
     // Renovation fields
     hasRenovation: false,
+    renoOver10k: false,
     renoMode: "total",        // "total" or "detailed"
     renoTotalAmount: "",
     renovationItems: [],
@@ -76,21 +77,20 @@ export default function App() {
     setResults(r);
     setUnitCostDetail(detail);
     setDepSchedule(schedule);
-    setStep(4);
+    setStep(3);
   };
 
-  if (step === 4 && results) {
+  if (step === 3 && results) {
     return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} depSchedule={depSchedule} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); setDepSchedule(null); }} />;
   }
 
   const steps = [
-    { title: "Property Type", icon: "\uD83C\uDFE0" },
-    { title: "Property Details", icon: "\uD83D\uDCCB" },
+    { title: "Property", icon: "\uD83C\uDFE0" },
     { title: "Building Info", icon: "\uD83D\uDD28" },
     { title: "Review & Run", icon: "\u26A1" },
   ];
 
-  const warnings = step === 3 ? getWarnings(formData) : [];
+  const warnings = step === 2 ? getWarnings(formData) : [];
 
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${colors.bg} 0%, #0F172A 100%)`, color: colors.text, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
@@ -135,10 +135,9 @@ export default function App() {
         </div>
 
         {/* Step Content */}
-        {step === 0 && <StepPropertyType formData={formData} update={update} />}
-        {step === 1 && <StepPropertyDetails formData={formData} update={update} errors={errors} />}
-        {step === 2 && <StepBuildingInfo formData={formData} update={update} errors={errors} />}
-        {step === 3 && <StepReview formData={formData} warnings={warnings} />}
+        {step === 0 && <StepProperty formData={formData} update={update} errors={errors} />}
+        {step === 1 && <StepBuildingInfo formData={formData} update={update} errors={errors} />}
+        {step === 2 && <StepReview formData={formData} warnings={warnings} />}
 
         {/* Validation Errors Summary */}
         {Object.keys(errors).length > 0 && (
@@ -158,7 +157,7 @@ export default function App() {
           {step > 0 ? (
             <button onClick={() => { setStep(step - 1); setErrors({}); }} style={btnSecondary}>{"\u2190"} Back</button>
           ) : <div />}
-          {step < 3 ? (
+          {step < 2 ? (
             <button onClick={handleNext} style={btnPrimary}>Continue {"\u2192"}</button>
           ) : (
             <button onClick={handleSubmit} style={{
