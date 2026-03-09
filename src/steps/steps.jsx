@@ -17,25 +17,43 @@ export function StepProperty({ formData, update, errors = {} }) {
   // Track the last value WE auto-set, so we know if user changed it
   const [lastAutoValue, setLastAutoValue] = useState(null);
 
+  const price = parseFloat((formData.purchasePrice || "").replace(/[$,\s]/g, "")) || 0;
+  const hasPrice = price > 0;
+  const isCondo = formData.propertyType === "condo";
+  const CONDO_LAND_PCT = 5;
+  const condoLandValue = Math.round(price * CONDO_LAND_PCT / 100);
+
   // Auto-estimate land value when price + location are available
   useEffect(() => {
-    const price = parseFloat((formData.purchasePrice || "").replace(/[$,\s]/g, ""));
-    if (price > 0 && (formData.state || formData.zip)) {
-      const est = estimateLandValue(price, formData.state, formData.zip);
-      setLandEstimate(est);
-      if (est) {
+    if (price > 0) {
+      if (isCondo) {
+        // Condos: small fixed percentage for shared land
+        const condoLand = Math.round(price * CONDO_LAND_PCT / 100);
         const currentLand = formData.landValue;
         const isUntouched = !currentLand || currentLand === "" || currentLand === "0"
           || currentLand === String(lastAutoValue);
         if (isUntouched) {
-          update("landValue", String(est.landValue));
-          setLastAutoValue(est.landValue);
+          update("landValue", String(condoLand));
+          setLastAutoValue(condoLand);
+        }
+        setLandEstimate({ landValue: condoLand, landSharePct: CONDO_LAND_PCT, source: "Condo standard (shared land)" });
+      } else if (formData.state || formData.zip) {
+        const est = estimateLandValue(price, formData.state, formData.zip);
+        setLandEstimate(est);
+        if (est) {
+          const currentLand = formData.landValue;
+          const isUntouched = !currentLand || currentLand === "" || currentLand === "0"
+            || currentLand === String(lastAutoValue);
+          if (isUntouched) {
+            update("landValue", String(est.landValue));
+            setLastAutoValue(est.landValue);
+          }
         }
       }
     } else {
       setLandEstimate(null);
     }
-  }, [formData.purchasePrice, formData.state, formData.zip]);
+  }, [formData.purchasePrice, formData.state, formData.zip, formData.propertyType]);
 
   const userOverrodeLand = landEstimate && formData.landValue
     && formData.landValue !== "" && formData.landValue !== "0"
@@ -58,9 +76,6 @@ export function StepProperty({ formData, update, errors = {} }) {
       {text}
     </div>
   );
-
-  const price = parseFloat((formData.purchasePrice || "").replace(/[$,\s]/g, ""));
-  const hasPrice = price > 0;
 
   return (
     <div>
@@ -100,21 +115,47 @@ export function StepProperty({ formData, update, errors = {} }) {
       {/* ── Purchase & Land Value ── */}
       {sectionLabel("Purchase Details")}
       <div style={{ display: "grid", gap: 14 }}>
-        <div className="csp-form-grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+        <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Input label="Purchase Price" value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder="$590,000" currency error={errors.purchasePrice} />
-          <Input label="Year Built" value={formData.yearBuilt} onChange={v => update("yearBuilt", v)} placeholder="1990" numeric error={errors.yearBuilt} />
-          <Input label="Year Purchased" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2024" numeric error={errors.yearPurchased} />
+          <Input label="Year Purchased" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2025" numeric error={errors.yearPurchased} />
         </div>
 
-        {/* Land Value Estimate Card */}
-        {!hasPrice ? (
-          <div style={{
-            padding: "16px 18px", borderRadius: 12, textAlign: "center",
-            border: `1px dashed ${colors.inputBorder}`, color: colors.textMuted, fontSize: 13,
-          }}>
-            Enter your purchase price to get a land value estimate
-          </div>
+        {/* Land Value — condos get simplified treatment */}
+        {isCondo ? (
+          hasPrice ? (
+            <div style={{
+              padding: "14px 18px", borderRadius: 12,
+              background: colors.accentGlow, border: `1px solid ${colors.accent}22`,
+            }}>
+              <div style={{ fontSize: 12, color: colors.textDim, lineHeight: 1.6 }}>
+                <strong>Land value for condos:</strong> Condo owners have a proportional share of the building's land, but it's typically very small (3–5%). We've estimated <strong>${condoLandValue.toLocaleString()}</strong> ({CONDO_LAND_PCT}% of price). You can adjust this if your tax assessment shows a different split.
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+                <input
+                  type="text" inputMode="decimal" name="land-value-estimate" autoComplete="off"
+                  value={formData.landValue ? '$' + String(formData.landValue).replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
+                  onChange={(e) => handleLandChange(e.target.value.replace(/[$,\s]/g, ""))}
+                  placeholder={`$${condoLandValue.toLocaleString()}`}
+                  style={{
+                    width: 160, padding: "8px 12px", borderRadius: 8, fontSize: 14, fontWeight: 600,
+                    border: `1.5px solid ${colors.inputBorder}`, background: colors.inputBg || colors.bg,
+                    color: colors.text, fontFamily: "inherit", outline: "none",
+                  }}
+                />
+                <span style={{ fontSize: 11, color: colors.textMuted }}>or leave as estimated</span>
+              </div>
+            </div>
+          ) : null
         ) : (
+          /* SFR land value card — full estimator */
+          !hasPrice ? (
+            <div style={{
+              padding: "16px 18px", borderRadius: 12, textAlign: "center",
+              border: `1px dashed ${colors.inputBorder}`, color: colors.textMuted, fontSize: 13,
+            }}>
+              Enter your purchase price to get a land value estimate
+            </div>
+          ) : (
           <div style={{
             padding: "18px 20px", borderRadius: 14,
             background: landEstimate ? `${colors.blue || "#3B82F6"}08` : colors.card,
@@ -177,6 +218,7 @@ export function StepProperty({ formData, update, errors = {} }) {
               }
             </div>
           </div>
+          )
         )}
       </div>
 
@@ -223,13 +265,13 @@ function QuickEstimate({ formData }) {
   const benefit = csYear1 - nocsYear1;
   const taxSavings = Math.round(benefit * (taxRate / 100));
 
-  if (taxSavings <= 0) return null;
+  if (segregated <= 0) return null;
 
   return (
     <div style={{
       marginTop: 24, padding: "20px 22px", borderRadius: 14,
-      background: `linear-gradient(135deg, ${colors.accent}10, ${colors.blue || "#3B82F6"}08)`,
-      border: `1.5px solid ${colors.accent}33`,
+      background: colors.accentGlow,
+      border: `1.5px solid ${colors.accent}22`,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <div style={{ fontSize: 16 }}>{"\u26A1"}</div>
@@ -239,22 +281,22 @@ function QuickEstimate({ formData }) {
       </div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         <div style={{ fontSize: 28, fontWeight: 800, color: colors.accent, letterSpacing: "-0.02em" }}>
-          ~${taxSavings.toLocaleString()}
+          ~${segregated.toLocaleString()}
         </div>
         <div style={{ fontSize: 13, color: colors.textDim }}>
-          estimated Year 1 tax savings
+          in accelerated depreciation
         </div>
       </div>
       <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
         <div style={{ fontSize: 11, color: colors.textMuted }}>
-          <span style={{ color: colors.textDim, fontWeight: 600 }}>${segregated.toLocaleString()}</span> accelerated ({Math.round((pp5Pct + li15Pct) * 100)}% of basis)
+          {Math.round((pp5Pct + li15Pct) * 100)}% of your ${(basis / 1000).toFixed(0)}K depreciable basis
         </div>
         <div style={{ fontSize: 11, color: colors.textMuted }}>
           Bonus: <span style={{ color: colors.textDim, fontWeight: 600 }}>{Math.round(bonusRate * 100)}%</span> ({yearPurchased})
         </div>
       </div>
       <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 10, lineHeight: 1.5 }}>
-        This is a simplified estimate using default assumptions. Complete the next steps for a detailed component-level analysis.
+        Simplified estimate using default assumptions. Complete the next steps for a detailed component-level analysis.
       </div>
     </div>
   );
@@ -275,16 +317,19 @@ export function StepBuildingInfo({ formData, update, errors = {} }) {
       <div style={{ display: "grid", gap: 16, marginTop: 24 }}>
         <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Input label="Square Footage" value={formData.sqft} onChange={v => update("sqft", v)} placeholder="1500" numeric error={errors.sqft} />
+          <Input label="Year Built" value={formData.yearBuilt} onChange={v => update("yearBuilt", v)} placeholder="1990" numeric error={errors.yearBuilt} />
+        </div>
+        <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Select label="Number of Stories" value={formData.stories} onChange={v => update("stories", v)} options={[
             { value: "1", label: "1 Story" }, { value: "2", label: "2 Stories" }, { value: "3", label: "3+ Stories" },
           ]} />
+          <Select label="Building Grade / Quality" value={formData.buildingGrade} onChange={v => update("buildingGrade", v)} options={[
+            { value: "economy", label: "Economy / Builder Grade" },
+            { value: "standard", label: "Standard" },
+            { value: "custom", label: "Custom / Above Average" },
+            { value: "luxury", label: "Luxury / High-End" },
+          ]} />
         </div>
-        <Select label="Building Grade / Quality" value={formData.buildingGrade} onChange={v => update("buildingGrade", v)} options={[
-          { value: "economy", label: "Economy / Builder Grade" },
-          { value: "standard", label: "Standard" },
-          { value: "custom", label: "Custom / Above Average" },
-          { value: "luxury", label: "Luxury / High-End" },
-        ]} />
         <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Input label="Bedrooms" value={formData.bedrooms} onChange={v => update("bedrooms", v)} numeric />
           <Input label="Bathrooms" value={formData.bathrooms} onChange={v => update("bathrooms", v)} numeric />

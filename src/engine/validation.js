@@ -10,7 +10,7 @@ export function validateForm(data, step) {
   const errors = {};
 
   if (step >= 0) {
-    // Step 0: Property (address, type, price, land, years)
+    // Step 0: Property (address, type, price, land, year purchased)
     const price = parseFloat(clean(data.purchasePrice));
     if (!data.purchasePrice || isNaN(price) || price <= 0) {
       errors.purchasePrice = "Enter a purchase price (e.g. 590000)";
@@ -29,13 +29,6 @@ export function validateForm(data, step) {
       }
     }
 
-    const yb = parseInt(clean(data.yearBuilt));
-    if (!data.yearBuilt || isNaN(yb)) {
-      errors.yearBuilt = "Enter the year the property was built (e.g. 1990)";
-    } else if (yb < 1900 || yb > new Date().getFullYear()) {
-      errors.yearBuilt = "Please enter a valid year between 1900 and " + new Date().getFullYear();
-    }
-
     const yp = parseInt(clean(data.yearPurchased));
     if (!data.yearPurchased || isNaN(yp)) {
       errors.yearPurchased = "Enter the year you purchased or placed in service";
@@ -47,7 +40,13 @@ export function validateForm(data, step) {
   }
 
   if (step >= 1) {
-    // Step 1: Building Info
+    // Step 1: Building Info (sqft, year built, tax rate)
+    const yb = parseInt(clean(data.yearBuilt));
+    if (!data.yearBuilt || isNaN(yb)) {
+      errors.yearBuilt = "Enter the year the property was built (e.g. 1990)";
+    } else if (yb < 1900 || yb > new Date().getFullYear()) {
+      errors.yearBuilt = "Please enter a valid year between 1900 and " + new Date().getFullYear();
+    }
     const sqft = parseFloat(clean(data.sqft));
     if (!data.sqft || isNaN(sqft) || sqft <= 0) {
       errors.sqft = "Enter the building's total square footage";
