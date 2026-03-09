@@ -158,6 +158,14 @@ export default function App() {
             Quick estimate using default assumptions. Complete the building details for a component-level breakdown with downloadable report.
           </div>
 
+          <div style={{
+            padding: "14px 20px", borderRadius: 10, marginBottom: 32, maxWidth: 440, margin: "0 auto 32px",
+            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+            fontSize: 12, color: colors.darkTextMuted, lineHeight: 1.6, textAlign: "left",
+          }}>
+            <strong style={{ color: colors.darkTextDim }}>Note:</strong> These preliminary figures are estimates only and are not IRS defensible. The detailed report generated in the next steps is engineered to meet IRS audit standards.
+          </div>
+
           <button onClick={dismissTeaser} style={{
             ...btnPrimary,
             fontSize: 16, padding: "16px 40px", borderRadius: 12,

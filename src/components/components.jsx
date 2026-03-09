@@ -6,16 +6,29 @@ function cleanNumeric(val) {
   return val.replace(/[$,\s]/g, '');
 }
 
-export function Input({ label, value, onChange, placeholder, type = "text", helper, error, numeric }) {
+// Format a raw numeric string with commas and optional $ prefix
+function formatCurrencyDisplay(val, withDollar) {
+  if (!val && val !== 0) return '';
+  const raw = String(val).replace(/[^0-9.]/g, '');
+  if (!raw) return '';
+  const parts = raw.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const formatted = parts.length > 1 ? parts[0] + '.' + parts[1] : parts[0];
+  return withDollar ? '$' + formatted : formatted;
+}
+
+export function Input({ label, value, onChange, placeholder, type = "text", helper, error, numeric, currency }) {
+  const isNumeric = numeric || currency;
   const handleChange = (v) => {
-    onChange(numeric ? cleanNumeric(v) : v);
+    onChange(isNumeric ? cleanNumeric(v) : v);
   };
+  const displayValue = currency ? formatCurrencyDisplay(value, true) : value;
   return (
     <div>
       <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: error ? colors.red : colors.textDim, marginBottom: 6 }}>{label}</label>
       <input
-        type={numeric ? "text" : type} inputMode={numeric ? "decimal" : undefined}
-        value={value} onChange={e => handleChange(e.target.value)} placeholder={placeholder}
+        type={isNumeric ? "text" : type} inputMode={isNumeric ? "decimal" : undefined}
+        value={displayValue} onChange={e => handleChange(e.target.value)} placeholder={placeholder}
         style={{
           width: "100%", padding: "12px 14px", borderRadius: 10, border: `1.5px solid ${error ? colors.red + "99" : colors.inputBorder}`,
           background: error ? colors.red + "08" : colors.inputBg, color: colors.text, fontSize: 15, outline: "none",

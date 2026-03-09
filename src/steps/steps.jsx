@@ -101,7 +101,7 @@ export function StepProperty({ formData, update, errors = {} }) {
       {sectionLabel("Purchase Details")}
       <div style={{ display: "grid", gap: 14 }}>
         <div className="csp-form-grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-          <Input label="Purchase Price ($)" value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder="590,000" numeric error={errors.purchasePrice} />
+          <Input label="Purchase Price" value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder="$590,000" currency error={errors.purchasePrice} />
           <Input label="Year Built" value={formData.yearBuilt} onChange={v => update("yearBuilt", v)} placeholder="1990" numeric error={errors.yearBuilt} />
           <Input label="Year Purchased" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2024" numeric error={errors.yearPurchased} />
         </div>
@@ -145,9 +145,9 @@ export function StepProperty({ formData, update, errors = {} }) {
                   type="text" inputMode="decimal"
                   name="land-value-estimate"
                   autoComplete="off"
-                  value={formData.landValue}
+                  value={formData.landValue ? '$' + String(formData.landValue).replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
                   onChange={(e) => handleLandChange(e.target.value.replace(/[$,\s]/g, ""))}
-                  placeholder={landEstimate ? `${landEstimate.landValue.toLocaleString()}` : "100000"}
+                  placeholder={landEstimate ? `$${landEstimate.landValue.toLocaleString()}` : "$100,000"}
                   style={{
                     width: "100%", padding: "12px 14px", borderRadius: 10, fontSize: 18, fontWeight: 700,
                     border: `1.5px solid ${errors.landValue ? (colors.red || "#EF4444") : colors.inputBorder}`,
@@ -470,11 +470,11 @@ function RenovationSection({ formData, update }) {
           {mode === "total" ? (
             <div>
               <Input
-                label="Total Renovation Cost ($)"
+                label="Total Renovation Cost"
                 value={formData.renoTotalAmount}
                 onChange={v => update("renoTotalAmount", v)}
-                placeholder="75000"
-                numeric
+                placeholder="$75,000"
+                currency
                 helper="We'll estimate how much qualifies for accelerated depreciation based on typical renovation breakdowns"
               />
             </div>
