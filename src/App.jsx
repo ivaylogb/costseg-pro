@@ -23,7 +23,7 @@ export default function App() {
     purchasePrice: "",
     landValue: "",
     yearBuilt: "",
-    yearPurchased: "",
+    yearPurchased: String(new Date().getFullYear()),
     sqft: "",
     stories: "1",
     buildingGrade: "standard",

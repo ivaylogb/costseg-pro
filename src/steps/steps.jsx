@@ -269,34 +269,58 @@ function QuickEstimate({ formData }) {
 
   return (
     <div style={{
-      marginTop: 24, padding: "20px 22px", borderRadius: 14,
-      background: colors.accentGlow,
+      marginTop: 28, borderRadius: 16, overflow: "hidden",
       border: `1.5px solid ${colors.accent}22`,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <div style={{ fontSize: 16 }}>{"\u26A1"}</div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: colors.accent, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      {/* Top section — the number */}
+      <div style={{
+        padding: "24px 22px 20px", background: colors.accentGlow,
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: colors.accent, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
           Quick Estimate
         </div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 36, color: colors.accent, letterSpacing: "-0.02em" }}>
+            ~${segregated.toLocaleString()}
+          </div>
+          <div style={{ fontSize: 14, color: colors.textDim }}>
+            in accelerated depreciation
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
+          <div style={{ fontSize: 12, color: colors.textMuted }}>
+            {Math.round((pp5Pct + li15Pct) * 100)}% of ${(basis / 1000).toFixed(0)}K basis
+          </div>
+          <div style={{ fontSize: 12, color: colors.textMuted }}>
+            {Math.round(bonusRate * 100)}% bonus ({yearPurchased})
+          </div>
+        </div>
       </div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-        <div style={{ fontSize: 28, fontWeight: 800, color: colors.accent, letterSpacing: "-0.02em" }}>
-          ~${segregated.toLocaleString()}
+
+      {/* Bottom section — the hook */}
+      <div style={{
+        padding: "16px 22px 20px",
+        background: colors.card,
+        borderTop: `1px solid ${colors.accent}15`,
+      }}>
+        <div style={{ fontSize: 13, color: colors.textDim, lineHeight: 1.6, marginBottom: 12 }}>
+          This is a simplified estimate. The detailed analysis on the next page generates a <strong style={{ color: colors.text }}>component-level breakdown with IRS-defensible MACRS classifications</strong> — the same methodology used in professional engineering-based cost segregation studies.
         </div>
-        <div style={{ fontSize: 13, color: colors.textDim }}>
-          in accelerated depreciation
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          {[
+            "RCNLD methodology",
+            "Rev. Proc. 87-56 compliant",
+            "RSMeans cost data",
+          ].map((tag, i) => (
+            <div key={i} style={{
+              padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+              background: colors.accentGlow, color: colors.accent,
+              border: `1px solid ${colors.accent}15`,
+            }}>
+              {tag}
+            </div>
+          ))}
         </div>
-      </div>
-      <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
-        <div style={{ fontSize: 11, color: colors.textMuted }}>
-          {Math.round((pp5Pct + li15Pct) * 100)}% of your ${(basis / 1000).toFixed(0)}K depreciable basis
-        </div>
-        <div style={{ fontSize: 11, color: colors.textMuted }}>
-          Bonus: <span style={{ color: colors.textDim, fontWeight: 600 }}>{Math.round(bonusRate * 100)}%</span> ({yearPurchased})
-        </div>
-      </div>
-      <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 10, lineHeight: 1.5 }}>
-        Simplified estimate using default assumptions. Complete the next steps for a detailed component-level analysis.
       </div>
     </div>
   );
