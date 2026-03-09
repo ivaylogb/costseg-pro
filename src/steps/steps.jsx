@@ -210,8 +210,9 @@ function QuickEstimate({ formData }) {
   const buildingTotal = basis - segregated;
 
   // Bonus depreciation
-  const bonusRates = { 2022: 1.0, 2023: 0.8, 2024: 0.6, 2025: 0.4, 2026: 0.2, 2027: 0 };
-  const bonusRate = bonusRates[yearPurchased] ?? (yearPurchased <= 2021 ? 1.0 : yearPurchased >= 2028 ? 0 : 0.4);
+  // OBBBA: 100% bonus permanent for property acquired after Jan 19, 2025
+  const bonusRates = { 2022: 1.0, 2023: 0.8, 2024: 0.6, 2025: 1.0 };
+  const bonusRate = bonusRates[yearPurchased] ?? (yearPurchased >= 2025 ? 1.0 : yearPurchased <= 2021 ? 1.0 : 0);
   const bonusAmount = Math.round(segregated * bonusRate);
   const buildingLife = 27.5;
 

@@ -223,9 +223,15 @@ const LAND_IMPROVEMENT_COMPONENTS = [
 ];
 
 // ─── BONUS DEPRECIATION SCHEDULE ─────────────────────────────────────────────
+// Updated for OBBBA (One Big Beautiful Bill Act), signed July 4, 2025.
+// 100% bonus permanently restored for property acquired AND placed in service
+// after January 19, 2025. Prior phasedown still applies to earlier acquisitions.
+// NOTE: Properties placed in service Jan 1-19, 2025 get 40% (pre-OBBBA).
 const BONUS_RATES = {
   2020: 1.00, 2021: 1.00, 2022: 1.00,
-  2023: 0.80, 2024: 0.60, 2025: 0.40, 2026: 0.20, 2027: 0.00,
+  2023: 0.80, 2024: 0.60,
+  2025: 1.00,  // OBBBA: 100% for property acquired after Jan 19, 2025
+  // 2026+: 100% permanent (OBBBA)
 };
 
 // ─── MAIN ENGINE ─────────────────────────────────────────────────────────────
@@ -328,7 +334,7 @@ export function runCostSegAnalysis(data) {
   }));
 
   // Bonus depreciation
-  const bonusRate = BONUS_RATES[yearPurchased] ?? (yearPurchased >= 2028 ? 0 : 0.40);
+  const bonusRate = BONUS_RATES[yearPurchased] ?? (yearPurchased >= 2025 ? 1.00 : yearPurchased >= 2020 ? 1.00 : 0);
   const bonusAmount = Math.round(segregatedTotal * bonusRate);
 
   // Year 1 depreciation comparison
