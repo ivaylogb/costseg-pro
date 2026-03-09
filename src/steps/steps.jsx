@@ -268,90 +268,21 @@ function QuickEstimate({ formData }) {
   if (segregated <= 0) return null;
 
   return (
-    <div style={{ marginTop: 28 }}>
-      {/* Estimate number */}
-      <div style={{
-        padding: "24px 22px", borderRadius: "16px 16px 0 0",
-        background: colors.accentGlow, border: `1.5px solid ${colors.accent}22`,
-        borderBottom: "none",
-      }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: colors.accent, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
-          Estimated Accelerated Depreciation
-        </div>
-        <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 38, color: colors.accent, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-          ~${segregated.toLocaleString()}
-        </div>
-        <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 6 }}>
-          {Math.round((pp5Pct + li15Pct) * 100)}% of ${(basis / 1000).toFixed(0)}K depreciable basis · {Math.round(bonusRate * 100)}% bonus depreciation
-        </div>
+    <div style={{
+      marginTop: 28, padding: "24px 22px", borderRadius: 16,
+      background: colors.accentGlow, border: `1.5px solid ${colors.accent}22`,
+    }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: colors.accent, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+        Estimated Accelerated Depreciation
       </div>
-
-      {/* Two options */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0,
-        border: `1.5px solid ${colors.accent}22`, borderTop: "none",
-        borderRadius: "0 0 16px 16px", overflow: "hidden",
-      }}>
-        {/* Option 1: Quick Summary */}
-        <div style={{
-          padding: "18px 18px", background: colors.card,
-          borderRight: `1px solid ${colors.cardBorder}`,
-        }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, marginBottom: 6 }}>
-            Download Summary
-          </div>
-          <div style={{ fontSize: 11, color: colors.textMuted, lineHeight: 1.5, marginBottom: 12 }}>
-            Quick overview with estimated allocation breakdown. For planning purposes only — not intended for tax filing.
-          </div>
-          <div style={{
-            fontSize: 10, color: colors.textMuted, padding: "3px 8px", borderRadius: 4,
-            background: `${colors.cardBorder}88`, display: "inline-block", marginBottom: 12,
-          }}>
-            Estimate only
-          </div>
-          <div>
-            <button style={{
-              width: "100%", padding: "10px 16px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-              background: "transparent", border: `1.5px solid ${colors.cardBorder}`,
-              color: colors.text, cursor: "pointer", fontFamily: "inherit",
-            }}>
-              Download PDF →
-            </button>
-          </div>
-        </div>
-
-        {/* Option 2: Full Report */}
-        <div style={{
-          padding: "18px 18px", background: `${colors.accent}05`,
-        }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: colors.accent, marginBottom: 6 }}>
-            Full Report
-          </div>
-          <div style={{ fontSize: 11, color: colors.textDim, lineHeight: 1.5, marginBottom: 12 }}>
-            Component-level analysis using IRS-accepted methodology. Engineered to support your tax return under audit.
-          </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
-            {["RCNLD", "Rev. Proc. 87-56", "RSMeans"].map((tag, i) => (
-              <div key={i} style={{
-                padding: "2px 7px", borderRadius: 4, fontSize: 9, fontWeight: 700,
-                background: colors.accentGlow, color: colors.accent,
-                letterSpacing: "0.03em",
-              }}>
-                {tag}
-              </div>
-            ))}
-          </div>
-          <div>
-            <button style={{
-              width: "100%", padding: "10px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700,
-              background: colors.accent, border: "none",
-              color: "#fff", cursor: "pointer", fontFamily: "inherit",
-              boxShadow: "0 2px 8px rgba(26,127,90,0.2)",
-            }}>
-              Continue to Full Report →
-            </button>
-          </div>
-        </div>
+      <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 38, color: colors.accent, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+        ~${segregated.toLocaleString()}
+      </div>
+      <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 6 }}>
+        {Math.round((pp5Pct + li15Pct) * 100)}% of ${(basis / 1000).toFixed(0)}K depreciable basis · {Math.round(bonusRate * 100)}% bonus depreciation
+      </div>
+      <div style={{ fontSize: 12, color: colors.textDim, marginTop: 14, lineHeight: 1.6 }}>
+        Continue to generate a full component-level report with IRS-accepted MACRS classifications and depreciation schedules.
       </div>
     </div>
   );
