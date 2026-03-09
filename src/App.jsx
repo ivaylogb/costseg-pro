@@ -46,6 +46,7 @@ export default function App() {
     taxRate: "37",
     // Renovation fields
     hasRenovation: false,
+    renoOver10k: false,
     renoMode: "total",        // "total" or "detailed"
     renoTotalAmount: "",
     renovationItems: [],
@@ -105,76 +106,72 @@ export default function App() {
   if (showTeaser && teaserData) {
     const t = teaserData;
     return (
-      <div style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${colors.bg} 0%, #0F172A 100%)`, color: colors.text, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+      <div style={{ minHeight: "100vh", background: colors.darkBg, color: colors.darkText, fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');`}</style>
         {/* Header */}
-        <div style={{ borderBottom: `1px solid ${colors.cardBorder}`, padding: "20px 0" }}>
-          <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${colors.accent}, ${colors.blue})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, color: colors.bg }}>CS</div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em" }}>CostSeg<span style={{ color: colors.accent }}>Pro</span></div>
-              <div style={{ fontSize: 11, color: colors.textMuted }}>Accelerated Depreciation Analysis</div>
-            </div>
+        <div style={{ borderBottom: `1px solid ${colors.darkBorder}`, padding: "16px 0" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentDim})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: "white" }}>CS</div>
+            <div style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.03em" }}>CostSeg<span style={{ color: colors.darkAccent }}>Pro</span></div>
           </div>
         </div>
 
-        <div style={{ maxWidth: 560, margin: "0 auto", padding: "60px 24px", textAlign: "center" }}>
-          <div style={{ fontSize: 14, color: colors.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
+        <div style={{ maxWidth: 560, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: colors.darkTextMuted, marginBottom: 16 }}>
             Based on your property
           </div>
-          <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 28 }}>
-            {[formData.address, formData.city, formData.state].filter(Boolean).join(", ")} &middot; {fmt(t.purchasePrice)}
+          <div style={{ fontSize: 15, color: colors.darkTextDim, marginBottom: 40 }}>
+            {[formData.address, formData.city, formData.state].filter(Boolean).join(", ")} · {fmt(t.purchasePrice)}
           </div>
 
           {/* Big number */}
           <div style={{
-            padding: "32px 24px", borderRadius: 20, marginBottom: 24,
-            background: `linear-gradient(135deg, ${colors.accent}12, ${colors.blue || "#3B82F6"}08)`,
-            border: `1.5px solid ${colors.accent}33`,
+            padding: "40px 32px", borderRadius: 20, marginBottom: 32,
+            background: "rgba(26,127,90,0.12)", border: "1px solid rgba(26,127,90,0.25)",
           }}>
-            <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 6 }}>Estimated Year 1 Tax Savings</div>
-            <div style={{ fontSize: 48, fontWeight: 800, color: colors.accent, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+            <div style={{ fontSize: 12, color: colors.darkTextDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+              Estimated Year 1 Tax Savings
+            </div>
+            <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 56, color: colors.darkAccent, letterSpacing: "-0.02em", lineHeight: 1 }}>
               {fmt(t.year1TaxSavings)}
             </div>
-            <div style={{ fontSize: 13, color: colors.textDim, marginTop: 10 }}>
-              {fmt(t.segregatedTotal)} accelerated &middot; {t.bonusRate}% bonus depreciation
+            <div style={{ fontSize: 14, color: colors.darkTextDim, marginTop: 14 }}>
+              {fmt(t.segregatedTotal)} reclassified · {t.bonusRate}% bonus depreciation
             </div>
           </div>
 
-          {/* Breakdown pills */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 32, flexWrap: "wrap" }}>
-            <div style={{ padding: "8px 16px", borderRadius: 10, background: `${colors.accent}12`, border: `1px solid ${colors.accent}33` }}>
-              <div style={{ fontSize: 11, color: colors.textMuted }}>5-Yr Property</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: colors.accent }}>{t.pp5Pct}%</div>
-            </div>
-            <div style={{ padding: "8px 16px", borderRadius: 10, background: `${colors.blue || "#3B82F6"}12`, border: `1px solid ${colors.blue || "#3B82F6"}33` }}>
-              <div style={{ fontSize: 11, color: colors.textMuted }}>15-Yr Property</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: colors.blue || "#3B82F6" }}>{t.li15Pct}%</div>
-            </div>
-            <div style={{ padding: "8px 16px", borderRadius: 10, background: `${colors.gold}12`, border: `1px solid ${colors.gold}33` }}>
-              <div style={{ fontSize: 11, color: colors.textMuted }}>5-Yr NPV Benefit</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: colors.gold }}>{fmt(t.npvBenefit)}</div>
-            </div>
+          {/* Details row */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 32, marginBottom: 40 }}>
+            {[
+              ["5-Year Property", t.pp5Pct + "%"],
+              ["15-Year Property", t.li15Pct + "%"],
+              ["Depreciable Basis", fmt(t.depreciableBasis)],
+            ].map(([label, val], i) => (
+              <div key={i}>
+                <div style={{ fontSize: 11, color: colors.darkTextMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: colors.darkText, marginTop: 4 }}>{val}</div>
+              </div>
+            ))}
           </div>
 
-          <div style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6, marginBottom: 28 }}>
-            This is a quick estimate using default assumptions. Add your building details for a more accurate, component-level analysis with a downloadable report.
+          <div style={{ fontSize: 14, color: colors.darkTextDim, lineHeight: 1.7, marginBottom: 32, maxWidth: 440, margin: "0 auto 32px" }}>
+            Quick estimate using default assumptions. Complete the building details for a component-level breakdown with downloadable report.
           </div>
 
           <button onClick={dismissTeaser} style={{
             ...btnPrimary,
-            background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentDim})`,
-            fontSize: 16, padding: "16px 40px",
-            boxShadow: `0 0 40px ${colors.accentGlow}`,
+            fontSize: 16, padding: "16px 40px", borderRadius: 12,
+            boxShadow: "0 4px 20px rgba(26,127,90,0.35)",
           }}>
-            Get Detailed Analysis {"\u2192"}
+            Get Detailed Analysis →
           </button>
 
           <div style={{ marginTop: 16 }}>
             <button onClick={() => { setShowTeaser(false); setTeaserData(null); setStep(0); }} style={{
-              background: "transparent", border: "none", color: colors.textMuted,
+              background: "transparent", border: "none", color: colors.darkTextMuted,
               fontSize: 13, cursor: "pointer", fontFamily: "inherit",
             }}>
-              {"\u2190"} Edit property details
+              ← Edit property details
             </button>
           </div>
         </div>
@@ -191,8 +188,9 @@ export default function App() {
   const warnings = step === 2 ? getWarnings(formData) : [];
 
   return (
-    <div style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${colors.bg} 0%, #0F172A 100%)`, color: colors.text, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: colors.bg, color: colors.text, fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif" }}>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
         @media (max-width: 600px) {
           .csp-form-grid-2 { grid-template-columns: 1fr !important; }
           .csp-form-grid-3 { grid-template-columns: 1fr !important; }
@@ -204,15 +202,12 @@ export default function App() {
         }
       `}</style>
       {/* Header */}
-      <div style={{ borderBottom: `1px solid ${colors.cardBorder}`, padding: "20px 0" }}>
+      <div style={{ borderBottom: `1px solid ${colors.cardBorder}`, padding: "16px 0", background: "rgba(250,250,248,0.85)", backdropFilter: "blur(20px)" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${colors.accent}, ${colors.blue})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, color: colors.bg }}>CS</div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em" }}>CostSeg<span style={{ color: colors.accent }}>Pro</span></div>
-              <div style={{ fontSize: 11, color: colors.textMuted }}>Accelerated Depreciation Analysis</div>
-            </div>
-          </div>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: colors.text }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentDim})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: "white" }}>CS</div>
+            <div style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.03em" }}>CostSeg<span style={{ color: colors.accent }}>Pro</span></div>
+          </a>
         </div>
       </div>
 
@@ -260,11 +255,10 @@ export default function App() {
           ) : (
             <button onClick={handleSubmit} style={{
               ...btnPrimary,
-              background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentDim})`,
-              fontSize: 16, padding: "14px 32px",
-              boxShadow: `0 0 30px ${colors.accentGlow}`,
+              fontSize: 16, padding: "16px 36px", borderRadius: 12,
+              boxShadow: "0 4px 20px rgba(26,127,90,0.35)",
             }}>
-              {"\u26A1"} Run Cost Segregation Analysis
+              Run Cost Segregation Analysis →
             </button>
           )}
         </div>
