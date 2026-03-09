@@ -3,12 +3,14 @@ import { runCostSegAnalysis } from './engine/engine';
 import { computeUnitCostBreakdown } from './engine/unitCosts';
 import { validateForm, getWarnings } from './engine/validation';
 import { generateDepreciationSchedule } from './engine/depreciationSchedule';
-import { colors, btnPrimary, btnSecondary } from './theme';
+import { colors, btnPrimary, btnSecondary, fmt } from './theme';
 import { StepProperty, StepBuildingInfo, StepReview } from './steps/steps';
 import { ResultsDashboard } from './pages/Results';
 
 export default function App() {
   const [step, setStep] = useState(0);
+  const [showTeaser, setShowTeaser] = useState(false);
+  const [teaserData, setTeaserData] = useState(null);
   const [results, setResults] = useState(null);
   const [unitCostDetail, setUnitCostDetail] = useState(null);
   const [depSchedule, setDepSchedule] = useState(null);
@@ -44,7 +46,6 @@ export default function App() {
     taxRate: "37",
     // Renovation fields
     hasRenovation: false,
-    renoOver10k: false,
     renoMode: "total",        // "total" or "detailed"
     renoTotalAmount: "",
     renovationItems: [],
@@ -67,7 +68,23 @@ export default function App() {
       return;
     }
     setErrors({});
+    
+    // Show teaser when leaving step 0
+    if (step === 0) {
+      const quickR = runCostSegAnalysis({ ...formData, sqft: "1500", taxRate: formData.taxRate || "37" });
+      if (quickR.year1TaxSavings > 0) {
+        setTeaserData(quickR);
+        setShowTeaser(true);
+        return;
+      }
+    }
     setStep(step + 1);
+  };
+
+  const dismissTeaser = () => {
+    setShowTeaser(false);
+    setTeaserData(null);
+    setStep(1);
   };
 
   const handleSubmit = () => {
@@ -81,7 +98,88 @@ export default function App() {
   };
 
   if (step === 3 && results) {
-    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} depSchedule={depSchedule} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); setDepSchedule(null); }} />;
+    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} depSchedule={depSchedule} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); setDepSchedule(null); setShowTeaser(false); setTeaserData(null); }} />;
+  }
+
+  // ── Teaser interstitial between Step 0 and Step 1 ──
+  if (showTeaser && teaserData) {
+    const t = teaserData;
+    return (
+      <div style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${colors.bg} 0%, #0F172A 100%)`, color: colors.text, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        {/* Header */}
+        <div style={{ borderBottom: `1px solid ${colors.cardBorder}`, padding: "20px 0" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${colors.accent}, ${colors.blue})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, color: colors.bg }}>CS</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em" }}>CostSeg<span style={{ color: colors.accent }}>Pro</span></div>
+              <div style={{ fontSize: 11, color: colors.textMuted }}>Accelerated Depreciation Analysis</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ maxWidth: 560, margin: "0 auto", padding: "60px 24px", textAlign: "center" }}>
+          <div style={{ fontSize: 14, color: colors.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
+            Based on your property
+          </div>
+          <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 28 }}>
+            {[formData.address, formData.city, formData.state].filter(Boolean).join(", ")} &middot; {fmt(t.purchasePrice)}
+          </div>
+
+          {/* Big number */}
+          <div style={{
+            padding: "32px 24px", borderRadius: 20, marginBottom: 24,
+            background: `linear-gradient(135deg, ${colors.accent}12, ${colors.blue || "#3B82F6"}08)`,
+            border: `1.5px solid ${colors.accent}33`,
+          }}>
+            <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 6 }}>Estimated Year 1 Tax Savings</div>
+            <div style={{ fontSize: 48, fontWeight: 800, color: colors.accent, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+              {fmt(t.year1TaxSavings)}
+            </div>
+            <div style={{ fontSize: 13, color: colors.textDim, marginTop: 10 }}>
+              {fmt(t.segregatedTotal)} accelerated &middot; {t.bonusRate}% bonus depreciation
+            </div>
+          </div>
+
+          {/* Breakdown pills */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 32, flexWrap: "wrap" }}>
+            <div style={{ padding: "8px 16px", borderRadius: 10, background: `${colors.accent}12`, border: `1px solid ${colors.accent}33` }}>
+              <div style={{ fontSize: 11, color: colors.textMuted }}>5-Yr Property</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: colors.accent }}>{t.pp5Pct}%</div>
+            </div>
+            <div style={{ padding: "8px 16px", borderRadius: 10, background: `${colors.blue || "#3B82F6"}12`, border: `1px solid ${colors.blue || "#3B82F6"}33` }}>
+              <div style={{ fontSize: 11, color: colors.textMuted }}>15-Yr Property</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: colors.blue || "#3B82F6" }}>{t.li15Pct}%</div>
+            </div>
+            <div style={{ padding: "8px 16px", borderRadius: 10, background: `${colors.gold}12`, border: `1px solid ${colors.gold}33` }}>
+              <div style={{ fontSize: 11, color: colors.textMuted }}>5-Yr NPV Benefit</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: colors.gold }}>{fmt(t.npvBenefit)}</div>
+            </div>
+          </div>
+
+          <div style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.6, marginBottom: 28 }}>
+            This is a quick estimate using default assumptions. Add your building details for a more accurate, component-level analysis with a downloadable report.
+          </div>
+
+          <button onClick={dismissTeaser} style={{
+            ...btnPrimary,
+            background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentDim})`,
+            fontSize: 16, padding: "16px 40px",
+            boxShadow: `0 0 40px ${colors.accentGlow}`,
+          }}>
+            Get Detailed Analysis {"\u2192"}
+          </button>
+
+          <div style={{ marginTop: 16 }}>
+            <button onClick={() => { setShowTeaser(false); setTeaserData(null); setStep(0); }} style={{
+              background: "transparent", border: "none", color: colors.textMuted,
+              fontSize: 13, cursor: "pointer", fontFamily: "inherit",
+            }}>
+              {"\u2190"} Edit property details
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const steps = [

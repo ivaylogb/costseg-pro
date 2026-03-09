@@ -14,23 +14,44 @@ const ALLOWED_TYPES = [
 // ─── COMBINED STEP: Address → Type → Price + Land ───────────────────────────
 export function StepProperty({ formData, update, errors = {} }) {
   const [landEstimate, setLandEstimate] = useState(null);
-  const [userOverrodeLand, setUserOverrodeLand] = useState(false);
+  // Track the last value WE auto-set, so we know if user changed it
+  const [lastAutoValue, setLastAutoValue] = useState(null);
 
+  // Auto-estimate land value when price + location are available
   useEffect(() => {
     const price = parseFloat((formData.purchasePrice || "").replace(/[$,\s]/g, ""));
     if (price > 0 && (formData.state || formData.zip)) {
       const est = estimateLandValue(price, formData.state, formData.zip);
       setLandEstimate(est);
-      if (est && !userOverrodeLand && !formData.landValue) {
-        update("landValue", String(est.landValue));
+      if (est) {
+        const currentLand = formData.landValue;
+        const isUntouched = !currentLand || currentLand === "" || currentLand === "0"
+          || currentLand === String(lastAutoValue);
+        if (isUntouched) {
+          update("landValue", String(est.landValue));
+          setLastAutoValue(est.landValue);
+        }
       }
     } else {
       setLandEstimate(null);
     }
   }, [formData.purchasePrice, formData.state, formData.zip]);
 
-  const handleLandChange = (v) => { setUserOverrodeLand(true); update("landValue", v); };
-  const applyEstimate = () => { if (landEstimate) { update("landValue", String(landEstimate.landValue)); setUserOverrodeLand(false); } };
+  const userOverrodeLand = landEstimate && formData.landValue
+    && formData.landValue !== "" && formData.landValue !== "0"
+    && formData.landValue !== String(lastAutoValue)
+    && formData.landValue !== String(landEstimate.landValue);
+
+  const handleLandChange = (v) => {
+    update("landValue", v);
+  };
+
+  const applyEstimate = () => {
+    if (landEstimate) {
+      update("landValue", String(landEstimate.landValue));
+      setLastAutoValue(landEstimate.landValue);
+    }
+  };
 
   const sectionLabel = (text) => (
     <div style={{ fontSize: 12, fontWeight: 700, color: colors.textDim, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 28, marginBottom: 12, paddingBottom: 8, borderBottom: `1px solid ${colors.cardBorder}` }}>
@@ -122,6 +143,8 @@ export function StepProperty({ formData, update, errors = {} }) {
               <div style={{ flex: 1 }}>
                 <input
                   type="text" inputMode="decimal"
+                  name="land-value-estimate"
+                  autoComplete="off"
                   value={formData.landValue}
                   onChange={(e) => handleLandChange(e.target.value.replace(/[$,\s]/g, ""))}
                   placeholder={landEstimate ? `${landEstimate.landValue.toLocaleString()}` : "100000"}
@@ -155,6 +178,82 @@ export function StepProperty({ formData, update, errors = {} }) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* ── Live Quick Estimate ── */}
+      <QuickEstimate formData={formData} />
+    </div>
+  );
+}
+
+// ─── QUICK ESTIMATE (live preview on Step 0) ────────────────────────────────
+function QuickEstimate({ formData }) {
+  const price = parseFloat((formData.purchasePrice || "").replace(/[$,\s]/g, "")) || 0;
+  const land = parseFloat((formData.landValue || "").replace(/[$,\s]/g, "")) || 0;
+  const yearPurchased = parseInt(formData.yearPurchased) || new Date().getFullYear();
+  const yearBuilt = parseInt(formData.yearBuilt) || 2000;
+  const taxRate = 37; // assume default for quick estimate
+
+  if (price <= 0 || land <= 0 || land >= price) return null;
+
+  const basis = price - land;
+  if (basis < 30000) return null;
+
+  // Quick allocation using base profile + age multiplier only
+  const profile = ALLOCATION_PROFILES[formData.propertyType] || ALLOCATION_PROFILES["single_family"];
+  const age = new Date().getFullYear() - yearBuilt;
+  const ageMult = age <= 5 ? 0.88 : age <= 10 ? 0.94 : age <= 20 ? 1.0 : age <= 30 ? 1.06 : age <= 40 ? 1.12 : 1.18;
+  
+  const pp5Pct = Math.min(profile.pp5 * ageMult, 0.45);
+  const li15Pct = Math.min(profile.li15 * ageMult, 0.30);
+  const segregated = Math.round(basis * (pp5Pct + li15Pct));
+  const buildingTotal = basis - segregated;
+
+  // Bonus depreciation
+  const bonusRates = { 2022: 1.0, 2023: 0.8, 2024: 0.6, 2025: 0.4, 2026: 0.2, 2027: 0 };
+  const bonusRate = bonusRates[yearPurchased] ?? (yearPurchased <= 2021 ? 1.0 : yearPurchased >= 2028 ? 0 : 0.4);
+  const bonusAmount = Math.round(segregated * bonusRate);
+  const buildingLife = 27.5;
+
+  // Year 1 depreciation with cost seg
+  const csYear1 = bonusAmount + Math.round(buildingTotal / buildingLife * 0.5);
+  // Year 1 without cost seg
+  const nocsYear1 = Math.round(basis / buildingLife * 0.5);
+  const benefit = csYear1 - nocsYear1;
+  const taxSavings = Math.round(benefit * (taxRate / 100));
+
+  if (taxSavings <= 0) return null;
+
+  return (
+    <div style={{
+      marginTop: 24, padding: "20px 22px", borderRadius: 14,
+      background: `linear-gradient(135deg, ${colors.accent}10, ${colors.blue || "#3B82F6"}08)`,
+      border: `1.5px solid ${colors.accent}33`,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <div style={{ fontSize: 16 }}>{"\u26A1"}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: colors.accent, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          Quick Estimate
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+        <div style={{ fontSize: 28, fontWeight: 800, color: colors.accent, letterSpacing: "-0.02em" }}>
+          ~${taxSavings.toLocaleString()}
+        </div>
+        <div style={{ fontSize: 13, color: colors.textDim }}>
+          estimated Year 1 tax savings
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
+        <div style={{ fontSize: 11, color: colors.textMuted }}>
+          <span style={{ color: colors.textDim, fontWeight: 600 }}>${segregated.toLocaleString()}</span> accelerated ({Math.round((pp5Pct + li15Pct) * 100)}% of basis)
+        </div>
+        <div style={{ fontSize: 11, color: colors.textMuted }}>
+          Bonus: <span style={{ color: colors.textDim, fontWeight: 600 }}>{Math.round(bonusRate * 100)}%</span> ({yearPurchased})
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 10, lineHeight: 1.5 }}>
+        This is a simplified estimate using default assumptions. Complete the next steps for a detailed component-level analysis.
       </div>
     </div>
   );
@@ -319,7 +418,6 @@ export function StepBuildingInfo({ formData, update, errors = {} }) {
 // ─── RENOVATION SECTION (inline in Building Info step) ──────────────────────
 function RenovationSection({ formData, update }) {
   const hasReno = formData.hasRenovation;
-  const over10k = formData.renoOver10k;
   const mode = formData.renoMode || "total";
 
   return (
@@ -332,24 +430,10 @@ function RenovationSection({ formData, update }) {
         label="Did you do renovations on this property?"
         sub="Kitchen remodel, new flooring, updated bathrooms, etc."
         checked={hasReno}
-        onChange={() => {
-          update("hasRenovation", !hasReno);
-          if (hasReno) { update("renoOver10k", false); }
-        }}
+        onChange={() => update("hasRenovation", !hasReno)}
       />
 
       {hasReno && (
-        <div style={{ marginTop: 10 }}>
-          <Toggle
-            label="Was the total renovation cost at least $10,000?"
-            sub="Cost segregation on renovations under $10K typically isn't worth the complexity"
-            checked={over10k}
-            onChange={() => update("renoOver10k", !over10k)}
-          />
-        </div>
-      )}
-
-      {hasReno && over10k && (
         <div style={{
           marginTop: 14, padding: 18, borderRadius: 12,
           background: `${colors.accent}08`, border: `1px solid ${colors.accent}22`,
@@ -752,7 +836,7 @@ export function StepReview({ formData, warnings = [] }) {
   ];
 
   // Add renovation info to review if present
-  if (formData.hasRenovation && formData.renoOver10k) {
+  if (formData.hasRenovation) {
     const renoItems = formData.renovationItems || [];
     if (formData.renoMode === "detailed" && renoItems.length > 0) {
       const renoTotal = renoItems.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
