@@ -11,6 +11,7 @@ const C = {
   gold: [245, 158, 11],
   blue: [59, 130, 246],
   accent2: [20, 95, 68],
+  red: [192, 57, 43],
 };
 
 const fmt = (n) => "$" + (n || 0).toLocaleString("en-US");
@@ -163,7 +164,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   addFooter();
 
   // ════════════════════════════════════════════════════════════════════════
-  // PAGE 2: ALLOCATION SUMMARY
+  // PAGE 2: ALLOCATION SUMMARY + YEAR 1 COMPARISON
   // ════════════════════════════════════════════════════════════════════════
   doc.addPage();
   let y = 50;
@@ -245,7 +246,136 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   addFooter();
 
   // ════════════════════════════════════════════════════════════════════════
-  // PAGE 3: UNIT COST DETAIL
+  // PAGE 3: 5-YEAR DEPRECIATION COMPARISON CHART
+  // ════════════════════════════════════════════════════════════════════════
+  if (depSchedule && depSchedule.length >= 5) {
+    doc.addPage();
+    doc.setFillColor(...C.primary);
+    doc.rect(0, 0, pageW, 8, 'F');
+    y = 50;
+
+    y = sectionHeading(y, '5-Year Total Deductions Comparison');
+    y = bodyText(y, 'Cumulative total depreciation deductions with cost segregation vs. straight-line only over the first 5 years.', { size: 9, color: C.muted });
+    y += 12;
+
+    // Prepare chart data
+    const chartYears = depSchedule.slice(0, 5);
+    const chartX = margin + 40;
+    const chartW = contentW - 60;
+    const chartH = 220;
+    const chartBottom = y + chartH;
+
+    // Find max value for scaling
+    let cumCS = 0, cumNoCS = 0;
+    const cumData = chartYears.map(row => {
+      cumCS += row.totalCS;
+      cumNoCS += row.totalNoCS;
+      return { year: row.calendarYear, withCS: cumCS, withoutCS: cumNoCS };
+    });
+    const maxVal = Math.max(...cumData.map(d => Math.max(d.withCS, d.withoutCS)));
+    const scale = chartH / (maxVal * 1.15); // 15% headroom
+
+    // Draw axes
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(chartX, y, chartX, chartBottom); // Y axis
+    doc.line(chartX, chartBottom, chartX + chartW, chartBottom); // X axis
+
+    // Y-axis labels
+    const gridLines = 5;
+    doc.setFontSize(7);
+    doc.setTextColor(...C.muted);
+    for (let i = 0; i <= gridLines; i++) {
+      const val = (maxVal * 1.15 / gridLines) * i;
+      const yPos = chartBottom - val * scale;
+      doc.setDrawColor(235, 235, 235);
+      doc.setLineWidth(0.3);
+      if (i > 0) doc.line(chartX, yPos, chartX + chartW, yPos);
+      doc.text(fmt(Math.round(val)), chartX - 6, yPos + 3, { align: 'right' });
+    }
+
+    // Draw bars
+    const groupW = chartW / 5;
+    const barW = groupW * 0.32;
+    const gap = groupW * 0.06;
+
+    cumData.forEach((d, i) => {
+      const groupX = chartX + i * groupW + groupW * 0.15;
+
+      // Bar: With CS (green)
+      const hCS = d.withCS * scale;
+      doc.setFillColor(...C.primary);
+      doc.roundedRect(groupX, chartBottom - hCS, barW, hCS, 2, 2, 'F');
+
+      // Bar: Without CS (light gray/red)
+      const hNoCS = d.withoutCS * scale;
+      doc.setFillColor(200, 210, 220);
+      doc.roundedRect(groupX + barW + gap, chartBottom - hNoCS, barW, hNoCS, 2, 2, 'F');
+
+      // Value labels on top of bars
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...C.primary);
+      doc.text(fmt(Math.round(d.withCS)), groupX + barW / 2, chartBottom - hCS - 4, { align: 'center' });
+      doc.setTextColor(...C.muted);
+      doc.text(fmt(Math.round(d.withoutCS)), groupX + barW + gap + barW / 2, chartBottom - hNoCS - 4, { align: 'center' });
+
+      // X-axis label
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...C.text);
+      doc.text('Year ' + (i + 1), groupX + barW + gap / 2, chartBottom + 14, { align: 'center' });
+      doc.setFontSize(7);
+      doc.setTextColor(...C.muted);
+      doc.text(String(d.year), groupX + barW + gap / 2, chartBottom + 24, { align: 'center' });
+    });
+
+    // Legend
+    const legendY = chartBottom + 40;
+    doc.setFillColor(...C.primary);
+    doc.roundedRect(chartX + chartW / 2 - 120, legendY, 10, 10, 2, 2, 'F');
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...C.text);
+    doc.text('Total Deductions with Cost Seg', chartX + chartW / 2 - 106, legendY + 8);
+
+    doc.setFillColor(200, 210, 220);
+    doc.roundedRect(chartX + chartW / 2 + 60, legendY, 10, 10, 2, 2, 'F');
+    doc.text('Total Deductions without Cost Seg', chartX + chartW / 2 + 74, legendY + 8);
+
+    // Summary table below chart
+    y = legendY + 30;
+    y = bodyText(y, 'Cumulative 5-year comparison:', { size: 9, bold: true });
+    y += 4;
+
+    const total5CS = cumData[4].withCS;
+    const total5NoCS = cumData[4].withoutCS;
+    const total5Benefit = total5CS - total5NoCS;
+
+    autoTable(doc, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [['', 'With Cost Segregation', 'Without', 'Benefit']],
+      body: [
+        ['5-Year Cumulative Deductions', fmt(Math.round(total5CS)), fmt(Math.round(total5NoCS)), fmt(Math.round(total5Benefit))],
+        ['5-Year Tax Savings (at ' + r.taxRate + '%)', fmt(Math.round(total5CS * r.taxRate / 100)), fmt(Math.round(total5NoCS * r.taxRate / 100)), fmt(Math.round(total5Benefit * r.taxRate / 100))],
+      ],
+      styles: { fontSize: 8.5, cellPadding: 5, textColor: C.text, lineColor: [226, 232, 240], lineWidth: 0.5 },
+      headStyles: { fillColor: C.text, textColor: C.white, fontStyle: 'bold', fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 253] },
+      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right', fontStyle: 'bold' } },
+      didParseCell: (data) => {
+        if (data.column.index === 3 && data.section === 'body') {
+          data.cell.styles.textColor = C.primary;
+        }
+      },
+    });
+
+    addFooter();
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // PAGE 4: UNIT COST DETAIL (5-Year PP + 15-Year LI)
   // ════════════════════════════════════════════════════════════════════════
   if (unitCostDetail) {
     doc.addPage();

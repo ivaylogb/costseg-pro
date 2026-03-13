@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { colors, cardStyle, btnSecondary, btnPrimary, fmt } from '../theme';
-import { StatCard, AllocRow, ComponentTable } from '../components/components';
+import { StatCard, AllocRow } from '../components/components';
 import { generatePDF } from '../pdf/pdfReport';
 
 export function ResultsDashboard({ results: r, formData, unitCostDetail, depSchedule, photos = [], onBack }) {
@@ -42,8 +42,14 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };
 
+  const handlePurchaseReport = () => {
+    // TODO: Wire up Stripe checkout
+    // For now, generate the PDF directly
+    generatePDF(r, formData, unitCostDetail, depSchedule);
+  };
+
   return (
-    <div style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${colors.bg} 0%, #0F172A 100%)`, color: colors.text, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: colors.bg, color: colors.text, fontFamily: "'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
       <style>{`
         @media (max-width: 600px) {
           .csp-results-header-btns { flex-direction: column !important; gap: 6px !important; }
@@ -54,23 +60,22 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
           .csp-results-meta { gap: 12px !important; }
           .csp-results-meta > div { font-size: 11px !important; }
           .csp-results-compare-grid { grid-template-columns: 1fr !important; }
-          .csp-results-component-grid { grid-template-columns: 1fr !important; }
           .csp-results-bottom-cta { flex-direction: column !important; gap: 8px !important; }
           .csp-results-bottom-cta button { margin-right: 0 !important; width: 100% !important; }
+          .csp-report-includes { grid-template-columns: 1fr !important; }
         }
       `}</style>
       {/* Header */}
-      <div style={{ borderBottom: `1px solid ${colors.cardBorder}`, padding: "16px 0" }}>
+      <div style={{ borderBottom: `1px solid ${colors.cardBorder}`, padding: "16px 0", background: colors.card }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${colors.accent}, ${colors.blue})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, color: colors.bg }}>CS</div>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: colors.accent, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, color: "#fff" }}>CS</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 16 }}>CostSeg<span style={{ color: colors.accent }}>Pro</span></div>
               <div style={{ fontSize: 11, color: colors.textMuted }}>Cost Segregation Analysis</div>
             </div>
           </div>
           <div className="csp-results-header-btns" style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => generatePDF(r, formData, unitCostDetail, depSchedule)} style={{ ...btnPrimary, fontSize: 13, padding: '10px 18px', background: colors.blue }}>{"\uD83D\uDCC4"} Download PDF</button>
             <button onClick={handleShareCPA} style={{ ...btnSecondary, fontSize: 13, padding: '10px 18px' }}>{"\uD83D\uDCE7"} Share with CPA</button>
             <button onClick={onBack} style={btnSecondary}>{"\u2190"} New Analysis</button>
           </div>
@@ -103,13 +108,13 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
         </div>
 
         {/* Hero Savings */}
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: 13, color: colors.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Estimated First-Year Tax Savings</div>
-          <div className="csp-results-hero-num" style={{ fontSize: 56, fontWeight: 800, letterSpacing: "-0.03em", background: `linear-gradient(135deg, ${colors.accent}, ${colors.gold})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          <div className="csp-results-hero-num" style={{ fontSize: 56, fontWeight: 800, letterSpacing: "-0.03em", color: colors.accent }}>
             {fmt(r.year1TaxSavings)}
           </div>
           <div style={{ fontSize: 14, color: colors.textDim, marginTop: 8 }}>
-            {r.bonusRate}% bonus depreciation · {r.taxRate}% marginal tax rate
+            {r.bonusRate}% bonus depreciation {"\u00B7"} {r.taxRate}% marginal tax rate
           </div>
         </div>
 
@@ -126,11 +131,31 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
           </div>
         </div>
 
-        {/* Summary Cards */}
+        {/* Year 1 Depreciation Comparison — moved up right under confidence */}
+        <div style={{ ...cardStyle, marginBottom: 24 }}>
+          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Year 1 Depreciation Comparison</div>
+          <div className="csp-results-compare-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+            <div style={{ padding: 20, borderRadius: 12, background: colors.accentLight, border: `1px solid ${colors.accent}33` }}>
+              <div style={{ fontSize: 12, color: colors.accent, fontWeight: 600, marginBottom: 4 }}>WITH COST SEGREGATION</div>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>{fmt(r.csYear1Dep)}</div>
+              <div style={{ fontSize: 12, color: colors.textDim, marginTop: 4 }}>Year 1 total depreciation</div>
+            </div>
+            <div style={{ padding: 20, borderRadius: 12, background: `${colors.red}08`, border: `1px solid ${colors.red}33` }}>
+              <div style={{ fontSize: 12, color: colors.red, fontWeight: 600, marginBottom: 4 }}>WITHOUT COST SEGREGATION</div>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>{fmt(r.noCsYear1Dep)}</div>
+              <div style={{ fontSize: 12, color: colors.textDim, marginTop: 4 }}>Year 1 straight-line only</div>
+            </div>
+          </div>
+          <div style={{ textAlign: "center", marginTop: 16, padding: 16, borderRadius: 12, background: `${colors.gold}11`, border: `1px solid ${colors.gold}33` }}>
+            <div style={{ fontSize: 12, color: colors.gold, fontWeight: 600 }}>ADDITIONAL YEAR 1 DEDUCTION</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: colors.gold }}>{fmt(r.year1Benefit)}</div>
+          </div>
+        </div>
+
+        {/* Summary Cards — Total Segregated and Year 1 Bonus only (NPV in paid report) */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 24 }}>
           <StatCard label="Total Segregated" value={fmt(r.segregatedTotal)} sub={`${r.segregatedPct}% of depreciable basis`} color={colors.accent} />
           <StatCard label="Year 1 Bonus Deduction" value={fmt(r.bonusAmount)} sub={`At ${r.bonusRate}% bonus rate`} color={colors.gold} />
-          <StatCard label="5-Year NPV Benefit" value={fmt(r.npvBenefit)} sub={`At ${r.taxRate}% tax rate, 5% discount`} color={colors.blue} />
         </div>
 
         {/* Allocation Breakdown */}
@@ -150,15 +175,15 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
             </div>
             <div>
               <AllocRow color={colors.blue} label={`Building (${r.buildingLife}-Year SL)`} value={fmt(r.buildingTotal)} pct={r.buildingPct} />
-              <div style={{ fontSize: 11, color: colors.textMuted, marginLeft: 24, marginTop: 3 }}>IRC §1250 Property · Straight-line depreciation · Mid-month convention</div>
+              <div style={{ fontSize: 11, color: colors.textMuted, marginLeft: 24, marginTop: 3 }}>IRC {"\u00A7"}1250 Property {"\u00B7"} Straight-line depreciation {"\u00B7"} Mid-month convention</div>
             </div>
             <div>
               <AllocRow color={colors.gold} label="Land Improvements (15-Year 150% DB)" value={fmt(r.li15Total)} pct={r.li15Pct} />
-              <div style={{ fontSize: 11, color: colors.textMuted, marginLeft: 24, marginTop: 3 }}>Rev. Proc. 87-56, Asset Class 00.3 · Half-year convention</div>
+              <div style={{ fontSize: 11, color: colors.textMuted, marginLeft: 24, marginTop: 3 }}>Rev. Proc. 87-56, Asset Class 00.3 {"\u00B7"} Half-year convention</div>
             </div>
             <div>
               <AllocRow color={colors.accent} label="Personal Property (5-Year 200% DB)" value={fmt(r.pp5Total)} pct={r.pp5Pct} />
-              <div style={{ fontSize: 11, color: colors.textMuted, marginLeft: 24, marginTop: 3 }}>IRC §1245 Property · Per Reg. Sec. 1.48-1(c) · Half-year convention</div>
+              <div style={{ fontSize: 11, color: colors.textMuted, marginLeft: 24, marginTop: 3 }}>IRC {"\u00A7"}1245 Property {"\u00B7"} Per Reg. Sec. 1.48-1(c) {"\u00B7"} Half-year convention</div>
             </div>
           </div>
 
@@ -168,36 +193,10 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
           </div>
         </div>
 
-        {/* Component Details */}
-        <div className="csp-results-component-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}>
-          <ComponentTable title="5-Year Personal Property" items={r.pp5Components} color={colors.accent} total={r.pp5Total} />
-          <ComponentTable title="15-Year Land Improvements" items={r.li15Components} color={colors.gold} total={r.li15Total} />
-        </div>
+        {/* NOTE: 5-year PP detail and 15-year LI detail tables removed from free summary */}
+        {/* They are included in the paid PDF report only */}
 
-        {/* Depreciation Comparison */}
-        <div style={{ ...cardStyle, marginBottom: 24 }}>
-          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Year 1 Depreciation Comparison</div>
-          <div className="csp-results-compare-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
-            <div style={{ padding: 20, borderRadius: 12, background: colors.accentGlow, border: `1px solid ${colors.accent}33` }}>
-              <div style={{ fontSize: 12, color: colors.accent, fontWeight: 600, marginBottom: 4 }}>WITH COST SEGREGATION</div>
-              <div style={{ fontSize: 28, fontWeight: 800 }}>{fmt(r.csYear1Dep)}</div>
-              <div style={{ fontSize: 12, color: colors.textDim, marginTop: 4 }}>Year 1 total depreciation</div>
-            </div>
-            <div style={{ padding: 20, borderRadius: 12, background: `${colors.red}11`, border: `1px solid ${colors.red}33` }}>
-              <div style={{ fontSize: 12, color: colors.red, fontWeight: 600, marginBottom: 4 }}>WITHOUT COST SEGREGATION</div>
-              <div style={{ fontSize: 28, fontWeight: 800 }}>{fmt(r.noCsYear1Dep)}</div>
-              <div style={{ fontSize: 12, color: colors.textDim, marginTop: 4 }}>Year 1 straight-line only</div>
-            </div>
-          </div>
-          <div style={{ textAlign: "center", marginTop: 16, padding: 16, borderRadius: 12, background: `${colors.gold}11`, border: `1px solid ${colors.gold}33` }}>
-            <div style={{ fontSize: 12, color: colors.gold, fontWeight: 600 }}>ADDITIONAL YEAR 1 DEDUCTION</div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: colors.gold }}>{fmt(r.year1Benefit)}</div>
-          </div>
-        </div>
-
-        {/* Uploaded Photos Exhibit */}
-
-        {/* Multi-Year Depreciation Schedule */}
+        {/* Depreciation Schedule — summary cards only */}
         {depSchedule && depSchedule.length > 0 && (() => {
           const sumRange = (arr) => ({
             totalCS: arr.reduce((s, row) => s + row.totalCS, 0),
@@ -222,13 +221,13 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 20 }}>
                 {[
                   { label: 'Year 1', data: y1, accent: true },
-                  { label: 'Years 1–5', data: y5 },
-                  { label: 'Years 1–10', data: y10 },
+                  { label: 'Years 1\u20135', data: y5 },
+                  { label: 'Years 1\u201310', data: y10 },
                   { label: `Full ${depSchedule.length} Years`, data: total },
                 ].map((period, i) => (
                   <div key={i} style={{
                     padding: '14px 12px', borderRadius: 10,
-                    background: period.accent ? colors.accentGlow : `${colors.cardBorder}55`,
+                    background: period.accent ? colors.accentLight : `${colors.cardBorder}55`,
                     border: `1px solid ${period.accent ? colors.accent + '44' : colors.cardBorder}`,
                   }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>{period.label}</div>
@@ -248,81 +247,20 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
                 ))}
               </div>
 
-              {/* Expandable Detail Table */}
-              <div
-                onClick={() => setShowFullSchedule(!showFullSchedule)}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 16px', borderRadius: 10, cursor: 'pointer',
-                  background: showFullSchedule ? `${colors.blue}12` : `${colors.cardBorder}44`,
-                  border: `1px solid ${showFullSchedule ? colors.blue + '44' : colors.cardBorder}`,
-                  transition: 'all 0.15s',
-                }}
-              >
-                <div style={{ fontSize: 13, fontWeight: 600, color: showFullSchedule ? colors.blue : colors.textDim }}>
-                  Year-by-Year Detail
+              {/* Year-by-year detail available in paid report */}
+              <div style={{ textAlign: 'center', padding: '12px 16px', borderRadius: 10, background: `${colors.cardBorder}33`, border: `1px solid ${colors.cardBorder}` }}>
+                <div style={{ fontSize: 13, color: colors.textDim }}>
+                  Full year-by-year depreciation schedule included in CPA-ready report
                 </div>
-                <div style={{
-                  fontSize: 16, color: showFullSchedule ? colors.blue : colors.textMuted,
-                  transform: showFullSchedule ? 'rotate(180deg)' : 'rotate(0deg)',
-                  transition: 'transform 0.2s',
-                }}>{'\u25BE'}</div>
               </div>
-
-              {showFullSchedule && (
-                <div style={{ overflowX: 'auto', marginTop: 12 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 420 }}>
-                    <thead>
-                      <tr style={{ borderBottom: `2px solid ${colors.accent}44` }}>
-                        {['Year', 'Total w/ CS', 'Total w/o CS', 'Benefit', '5-Yr PP', '15-Yr LI', `${r.buildingLife}-Yr Bldg`].map((h, i) => (
-                          <th key={i} style={{
-                            padding: '8px 6px', textAlign: i === 0 ? 'center' : 'right',
-                            fontWeight: 700, color: colors.textDim, fontSize: 10,
-                            textTransform: 'uppercase', letterSpacing: '0.04em',
-                          }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {depSchedule.map((row, i) => (
-                        <tr key={i} style={{
-                          borderBottom: `1px solid ${colors.cardBorder}`,
-                          background: i === 0 ? colors.accentGlow : (i % 2 === 0 ? 'transparent' : `${colors.cardBorder}33`),
-                        }}>
-                          <td style={{ padding: '6px', textAlign: 'center', fontWeight: 600, color: colors.textDim, fontSize: 11 }}>{row.calendarYear}</td>
-                          <td style={{ padding: '6px', textAlign: 'right', fontWeight: 600 }}>{fmt(row.totalCS)}</td>
-                          <td style={{ padding: '6px', textAlign: 'right', color: colors.textMuted }}>{fmt(row.totalNoCS)}</td>
-                          <td style={{ padding: '6px', textAlign: 'right', fontWeight: 600, color: row.benefit > 0 ? colors.accent : row.benefit < 0 ? colors.red : colors.textMuted }}>
-                            {row.benefit > 0 ? '+' : ''}{fmt(row.benefit)}
-                          </td>
-                          <td style={{ padding: '6px', textAlign: 'right', color: row.dep5yr > 0 ? colors.accent : colors.textMuted, fontSize: 11 }}>{row.dep5yr > 0 ? fmt(row.dep5yr) : '\u2014'}</td>
-                          <td style={{ padding: '6px', textAlign: 'right', color: row.dep15yr > 0 ? colors.gold : colors.textMuted, fontSize: 11 }}>{row.dep15yr > 0 ? fmt(row.dep15yr) : '\u2014'}</td>
-                          <td style={{ padding: '6px', textAlign: 'right', color: colors.blue, fontSize: 11 }}>{fmt(row.depBuilding)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr style={{ borderTop: `2px solid ${colors.accent}44` }}>
-                        <td style={{ padding: '8px 6px', fontWeight: 700, fontSize: 11 }}>TOTAL</td>
-                        <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}>{fmt(total.totalCS)}</td>
-                        <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.textMuted }}>{fmt(total.totalNoCS)}</td>
-                        <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(total.benefit)}</td>
-                        <td colSpan={3} style={{ padding: '8px 6px', textAlign: 'right', fontSize: 10, color: colors.textMuted }}>
-                          Cumulative: {fmt(total.totalCS)}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              )}
             </div>
           );
         })()}
 
-        {/* Photos Exhibit (original) */}
+        {/* Photos Exhibit */}
         {photos.length > 0 && (
           <div style={{ ...cardStyle, marginBottom: 24 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>Exhibit — Property Photographs</div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>Exhibit {"\u2014"} Property Photographs</div>
             <div style={{ fontSize: 13, color: colors.textDim, marginBottom: 20 }}>{photos.length} photo{photos.length !== 1 ? 's' : ''} provided by property owner</div>
             {['exterior', 'kitchen', 'bathroom', 'flooring', 'landscape', 'other'].map(cat => {
               const catPhotos = photos.filter(p => p.category === cat);
@@ -368,8 +306,8 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
             </p>
             <p style={{ marginBottom: 14 }}>
               The building recovery period is determined based on the property's use. Residential rental property is depreciated over 27.5 years. 
-              Properties rented on a transient basis — where more than half of occupied rental days involve stays under 30 days — are classified 
-              as nonresidential real property and depreciated over 39 years per IRC §168(e)(2)(A)(ii).
+              Properties rented on a transient basis {"\u2014"} where more than half of occupied rental days involve stays under 30 days {"\u2014"} are classified 
+              as nonresidential real property and depreciated over 39 years per IRC {"\u00A7"}168(e)(2)(A)(ii).
             </p>
             <p>
               Bonus depreciation is applied at the applicable rate under IRC Section 168(k) based on the property's placed-in-service date. 
@@ -382,7 +320,7 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
         {/* Disclaimer */}
         <div style={{ ...cardStyle, borderColor: `${colors.gold}33`, background: `${colors.gold}08`, marginBottom: 24 }}>
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-            <div style={{ fontSize: 20, flexShrink: 0 }}>⚠️</div>
+            <div style={{ fontSize: 20, flexShrink: 0 }}>{"\u26A0\uFE0F"}</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 14, color: colors.gold, marginBottom: 6 }}>Important Disclaimer</div>
               <div style={{ fontSize: 13, color: colors.textDim, lineHeight: 1.6 }}>
@@ -396,23 +334,77 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
           </div>
         </div>
 
-        {/* Bottom CTA */}
-        <div className="csp-results-bottom-cta" style={{ textAlign: 'center', padding: '32px 0', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 12 }}>
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* PURCHASE CPA-READY REPORT CTA                                     */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        <div style={{
+          ...cardStyle,
+          marginBottom: 24,
+          background: `linear-gradient(135deg, ${colors.accent}08, ${colors.accent}03)`,
+          border: `2px solid ${colors.accent}44`,
+          textAlign: 'center',
+          padding: '32px 24px',
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: colors.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+            Full Report Available
+          </div>
+          <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 28, fontWeight: 400, color: colors.text, marginBottom: 8, letterSpacing: '-0.02em' }}>
+            Get Your CPA-Ready Report
+          </div>
+          <div style={{ fontSize: 14, color: colors.textDim, maxWidth: 520, margin: '0 auto 24px', lineHeight: 1.6 }}>
+            A comprehensive, professionally formatted PDF report ready to share with your tax advisor.
+          </div>
+
+          {/* What's included grid */}
+          <div className="csp-report-includes" style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
+            textAlign: 'left', maxWidth: 560, margin: '0 auto 28px',
+          }}>
+            {[
+              { icon: '\uD83D\uDCCA', text: '5-year depreciation comparison chart' },
+              { icon: '\uD83D\uDD0D', text: 'Detailed personal property breakdown' },
+              { icon: '\uD83C\uDF3F', text: 'Land improvement cost detail' },
+              { icon: '\uD83D\uDCCB', text: 'Full multi-year depreciation schedule' },
+              { icon: '\u2696\uFE0F', text: 'IRS methodology & tax references' },
+              { icon: '\uD83D\uDCC4', text: 'NPV benefit analysis' },
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ fontSize: 13, color: colors.textDim }}>{item.text}</span>
+              </div>
+            ))}
+          </div>
+
           <button
-            onClick={() => generatePDF(r, formData, unitCostDetail, depSchedule)}
+            onClick={handlePurchaseReport}
             style={{
-              ...btnPrimary, fontSize: 15, padding: '14px 28px', marginRight: 12,
-              background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentDim})`,
-              boxShadow: `0 0 20px ${colors.accentGlow}`,
+              ...btnPrimary,
+              fontSize: 16,
+              padding: '16px 40px',
+              background: colors.accent,
+              boxShadow: '0 4px 20px rgba(26,127,90,0.3)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
             }}
           >
-            {"\uD83D\uDCC4"} Download PDF Report
+            {"\uD83D\uDCC4"} Purchase CPA-Ready Report
           </button>
-          <button onClick={handleShareCPA} style={{ ...btnSecondary, fontSize: 15, padding: '14px 28px', marginRight: 12 }}>
+          <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 12 }}>
+            Instant PDF download {"\u00B7"} Share directly with your CPA
+          </div>
+        </div>
+
+        {/* Bottom actions */}
+        <div className="csp-results-bottom-cta" style={{ textAlign: 'center', padding: '24px 0', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <button onClick={handleShareCPA} style={{ ...btnSecondary, fontSize: 14, padding: '12px 24px' }}>
             {"\uD83D\uDCE7"} Share with CPA
           </button>
-          <button onClick={() => window.print()} style={{ ...btnSecondary, fontSize: 15, padding: '14px 28px' }}>
-            {"\uD83D\uDDA8"} Print
+          <button onClick={() => window.print()} style={{ ...btnSecondary, fontSize: 14, padding: '12px 24px' }}>
+            {"\uD83D\uDDA8"} Print Summary
+          </button>
+          <button onClick={onBack} style={{ ...btnSecondary, fontSize: 14, padding: '12px 24px' }}>
+            {"\u2190"} New Analysis
           </button>
         </div>
 
