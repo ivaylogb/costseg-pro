@@ -74,6 +74,7 @@ export default function App() {
           setUnitCostDetail(detail);
           setDepSchedule(schedule);
           setStep(3);
+          window.scrollTo(0, 0);
         } else {
           console.warn('CostSegPro: No saved form data found after Stripe return');
         }
@@ -95,6 +96,7 @@ export default function App() {
           setUnitCostDetail(detail);
           setDepSchedule(schedule);
           setStep(3);
+          window.scrollTo(0, 0);
           localStorage.removeItem('csp_formData');
         }
       } catch (err) {
@@ -120,6 +122,7 @@ export default function App() {
     }
     setErrors({});
     setStep(step + 1);
+    window.scrollTo(0, 0);
   };
 
   const handleSubmit = () => {
@@ -135,6 +138,7 @@ export default function App() {
     setUnitCostDetail(detail);
     setDepSchedule(schedule);
     setStep(3);
+    window.scrollTo(0, 0);
   };
 
   if (step === 3 && results) {
@@ -210,7 +214,7 @@ export default function App() {
         {/* Navigation */}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32 }}>
           {step > 0 ? (
-            <button onClick={() => { setStep(step - 1); setErrors({}); }} style={btnSecondary}>{"\u2190"} Back</button>
+            <button onClick={() => { setStep(step - 1); setErrors({}); window.scrollTo(0, 0); }} style={btnSecondary}>{"\u2190"} Back</button>
           ) : <div />}
           {step < 2 ? (
             <button onClick={handleNext} style={btnPrimary}>Continue {"\u2192"}</button>
