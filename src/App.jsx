@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { runCostSegAnalysis } from './engine/engine';
 import { computeUnitCostBreakdown } from './engine/unitCosts';
 import { validateForm, getWarnings } from './engine/validation';
@@ -54,6 +54,53 @@ export default function App() {
     renoIndirectType: "gc",
     renoIndirectCustomRate: "",
   });
+
+  // On mount: check if returning from Stripe checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    const paymentStatus = params.get('payment');
+
+    if (sessionId && paymentStatus === 'success') {
+      try {
+        const saved = sessionStorage.getItem('csp_formData');
+        if (saved) {
+          const savedForm = JSON.parse(saved);
+          setFormData(savedForm);
+          const r = runCostSegAnalysis(savedForm);
+          const detail = computeUnitCostBreakdown(savedForm, r.depreciableBasis);
+          const schedule = generateDepreciationSchedule(r, savedForm);
+          setResults(r);
+          setUnitCostDetail(detail);
+          setDepSchedule(schedule);
+          setStep(3);
+        }
+      } catch (err) {
+        console.error('Failed to restore session:', err);
+      }
+    }
+
+    if (paymentStatus === 'cancelled') {
+      try {
+        const saved = sessionStorage.getItem('csp_formData');
+        if (saved) {
+          const savedForm = JSON.parse(saved);
+          setFormData(savedForm);
+          const r = runCostSegAnalysis(savedForm);
+          const detail = computeUnitCostBreakdown(savedForm, r.depreciableBasis);
+          const schedule = generateDepreciationSchedule(r, savedForm);
+          setResults(r);
+          setUnitCostDetail(detail);
+          setDepSchedule(schedule);
+          setStep(3);
+          sessionStorage.removeItem('csp_formData');
+        }
+      } catch (err) {
+        console.error('Failed to restore session:', err);
+      }
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const update = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
