@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { runCostSegAnalysis } from './engine/engine';
 import { computeUnitCostBreakdown } from './engine/unitCosts';
 import { validateForm, getWarnings } from './engine/validation';
@@ -7,50 +7,98 @@ import { colors, btnPrimary, btnSecondary } from './theme';
 import { StepProperty, StepBuildingInfo, StepReview } from './steps/steps';
 import { ResultsDashboard } from './pages/Results';
 
+const STORAGE_KEY = 'costseg_form';
+const defaultFormData = {
+  propertyType: "single_family",
+  propertyName: "",
+  address: "",
+  city: "",
+  state: "CA",
+  zip: "",
+  purchasePrice: "",
+  landValue: "",
+  yearBuilt: "",
+  yearPurchased: String(new Date().getFullYear()),
+  sqft: "",
+  stories: "1",
+  buildingGrade: "standard",
+  hasPool: false,
+  isFurnished: false,
+  isShortTermRental: false,
+  hasHotTub: false,
+  hasFireplace: false,
+  numFireplaces: "1",
+  hasGameRoom: false,
+  hasDeck: false,
+  deckSize: "medium",
+  poolType: "inground_concrete",
+  flooringType: "default",
+  recentlyRenovated: false,
+  bedrooms: "3",
+  bathrooms: "2",
+  taxRate: "37",
+  hasRenovation: false,
+  renoOver10k: false,
+  renoMode: "total",
+  renoTotalAmount: "",
+  renovationItems: [],
+  renoIndirectType: "gc",
+  renoIndirectCustomRate: "",
+};
+
+function loadSavedForm() {
+  try {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return { ...defaultFormData, ...parsed };
+    }
+  } catch {}
+  return defaultFormData;
+}
+
 export default function App() {
   const [step, setStep] = useState(0);
   const [results, setResults] = useState(null);
   const [unitCostDetail, setUnitCostDetail] = useState(null);
   const [depSchedule, setDepSchedule] = useState(null);
   const [errors, setErrors] = useState({});
-  const [formData, setFormData] = useState({
-    propertyType: "single_family",
-    propertyName: "",
-    address: "",
-    city: "",
-    state: "CA",
-    zip: "",
-    purchasePrice: "",
-    landValue: "",
-    yearBuilt: "",
-    yearPurchased: String(new Date().getFullYear()),
-    sqft: "",
-    stories: "1",
-    buildingGrade: "standard",
-    hasPool: false,
-    isFurnished: false,
-    isShortTermRental: false,
-    hasHotTub: false,
-    hasFireplace: false,
-    numFireplaces: "1",
-    hasGameRoom: false,
-    hasDeck: false,
-    deckSize: "medium",
-    poolType: "inground_concrete",
-    flooringType: "default",
-    recentlyRenovated: false,
-    bedrooms: "3",
-    bathrooms: "2",
-    taxRate: "37",
-    // Renovation fields
-    hasRenovation: false,
-    renoOver10k: false,
-    renoMode: "total",        // "total" or "detailed"
-    renoTotalAmount: "",
-    renovationItems: [],
-    renoIndirectType: "gc",
-    renoIndirectCustomRate: "",
-  });
+  const [formData, setFormData] = useState(loadSavedForm);
+  const skipPush = useRef(false);
+
+  // Persist form data to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+  }, [formData]);
+
+  // Push browser history on step change
+  useEffect(() => {
+    if (skipPush.current) {
+      skipPush.current = false;
+      return;
+    }
+    window.history.pushState({ step }, '', window.location.hash || '#/app');
+  }, [step]);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const onPopState = (e) => {
+      if (e.state && typeof e.state.step === 'number') {
+        skipPush.current = true;
+        setStep(e.state.step);
+        setErrors({});
+        if (e.state.step < 3) {
+          setResults(null);
+          setUnitCostDetail(null);
+          setDepSchedule(null);
+        }
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    // Replace initial history entry with step 0
+    window.history.replaceState({ step: 0 }, '', window.location.hash || '#/app');
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   const update = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -81,7 +129,7 @@ export default function App() {
   };
 
   if (step === 3 && results) {
-    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} depSchedule={depSchedule} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); setDepSchedule(null); }} />;
+    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} depSchedule={depSchedule} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); setDepSchedule(null); sessionStorage.removeItem(STORAGE_KEY); setFormData(defaultFormData); }} />;
   }
 
   const steps = [

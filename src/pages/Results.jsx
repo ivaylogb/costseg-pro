@@ -1,13 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { colors, cardStyle, btnSecondary, btnPrimary, fmt } from '../theme';
 import { StatCard, AllocRow } from '../components/components';
 import { generatePDF } from '../pdf/pdfReport';
 
 export function ResultsDashboard({ results: r, formData, unitCostDetail, depSchedule, photos = [], onBack }) {
-  const [showFullSchedule, setShowFullSchedule] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const address = [formData.address, formData.city, formData.state, formData.zip].filter(Boolean).join(', ');
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const propertyName = formData.propertyName || address || 'Subject Property';
+
+  // Check for returning from Stripe checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    const paymentStatus = params.get('payment');
+
+    if (sessionId && paymentStatus === 'success') {
+      // Verify payment server-side
+      fetch('/api/verify-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.paid) {
+            setIsPaid(true);
+            // Clean URL without reloading
+            window.history.replaceState({}, '', window.location.pathname);
+            // Auto-download the PDF
+            generatePDF(r, formData, unitCostDetail, depSchedule);
+          }
+        })
+        .catch(err => console.error('Payment verification failed:', err));
+    }
+  }, []);
 
   const getConfidence = () => {
     const wellSupported = ['single_family', 'condo', 'multifamily', 'apartment'];
@@ -42,10 +70,35 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };
 
-  const handlePurchaseReport = () => {
-    // TODO: Wire up Stripe checkout
-    // For now, generate the PDF directly
-    generatePDF(r, formData, unitCostDetail, depSchedule);
+  const handlePurchaseReport = async () => {
+    if (isPaid) {
+      // Already paid — just download the PDF
+      generatePDF(r, formData, unitCostDetail, depSchedule);
+      return;
+    }
+
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          propertyName,
+          propertyAddress: address,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Unable to start checkout. Please try again.');
+        setCheckoutLoading(false);
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert('Unable to start checkout. Please try again.');
+      setCheckoutLoading(false);
+    }
   };
 
   return (
@@ -377,21 +430,24 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
 
           <button
             onClick={handlePurchaseReport}
+            disabled={checkoutLoading}
             style={{
               ...btnPrimary,
               fontSize: 16,
               padding: '16px 40px',
-              background: colors.accent,
+              background: isPaid ? colors.accent : colors.accent,
               boxShadow: '0 4px 20px rgba(26,127,90,0.3)',
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
+              opacity: checkoutLoading ? 0.7 : 1,
+              cursor: checkoutLoading ? 'wait' : 'pointer',
             }}
           >
-            {"\uD83D\uDCC4"} Purchase CPA-Ready Report
+            {checkoutLoading ? 'Redirecting to checkout...' : isPaid ? '\uD83D\uDCC4 Download CPA-Ready Report' : '\uD83D\uDCC4 Purchase CPA-Ready Report'}
           </button>
           <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 12 }}>
-            Instant PDF download {"\u00B7"} Share directly with your CPA
+            {isPaid ? 'Your report is ready — download anytime' : `Instant PDF download ${"\u00B7"} Share directly with your CPA`}
           </div>
         </div>
 
