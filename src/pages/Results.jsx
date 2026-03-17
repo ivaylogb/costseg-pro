@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { colors, cardStyle, btnSecondary, btnPrimary, fmt } from '../theme';
-import { StatCard, AllocRow } from '../components/components';
+import { StatCard, AllocRow, ComponentTable } from '../components/components';
 import { generatePDF } from '../pdf/pdfReport';
 
 export function ResultsDashboard({ results: r, formData, unitCostDetail, depSchedule, photos = [], onBack }) {
   const [isPaid, setIsPaid] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [showFullSchedule, setShowFullSchedule] = useState(false);
   const address = [formData.address, formData.city, formData.state, formData.zip].filter(Boolean).join(', ');
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const propertyName = formData.propertyName || address || 'Subject Property';
@@ -29,8 +33,6 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
             setIsPaid(true);
             // Clean URL without reloading
             window.history.replaceState({}, '', window.location.pathname);
-            // Auto-download the PDF
-            generatePDF(r, formData, unitCostDetail, depSchedule);
           }
         })
         .catch(err => console.error('Payment verification failed:', err));
@@ -72,7 +74,6 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
 
   const handlePurchaseReport = async () => {
     if (isPaid) {
-      // Already paid — just download the PDF
       generatePDF(r, formData, unitCostDetail, depSchedule);
       return;
     }
@@ -89,7 +90,6 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
       });
       const data = await res.json();
       if (data.url) {
-        // Save form data so we can restore after Stripe redirect
         localStorage.setItem('csp_formData', JSON.stringify(formData));
         window.location.href = data.url;
       } else {
@@ -101,6 +101,29 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
       alert('Unable to start checkout. Please try again.');
       setCheckoutLoading(false);
     }
+  };
+
+  const handlePromoCode = async () => {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError('');
+    try {
+      const res = await fetch('/api/verify-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoCode }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setIsPaid(true);
+        setPromoError('');
+      } else {
+        setPromoError('Invalid promo code');
+      }
+    } catch (err) {
+      setPromoError('Unable to verify code');
+    }
+    setPromoLoading(false);
   };
 
   return (
@@ -115,6 +138,7 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
           .csp-results-meta { gap: 12px !important; }
           .csp-results-meta > div { font-size: 11px !important; }
           .csp-results-compare-grid { grid-template-columns: 1fr !important; }
+          .csp-results-component-grid { grid-template-columns: 1fr !important; }
           .csp-results-bottom-cta { flex-direction: column !important; gap: 8px !important; }
           .csp-results-bottom-cta button { margin-right: 0 !important; width: 100% !important; }
           .csp-report-includes { grid-template-columns: 1fr !important; }
@@ -131,6 +155,9 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
             </div>
           </div>
           <div className="csp-results-header-btns" style={{ display: 'flex', gap: 10 }}>
+            {isPaid && (
+              <button onClick={() => generatePDF(r, formData, unitCostDetail, depSchedule)} style={{ ...btnPrimary, fontSize: 13, padding: '10px 18px' }}>{"\uD83D\uDCC4"} Download PDF</button>
+            )}
             <button onClick={handleShareCPA} style={{ ...btnSecondary, fontSize: 13, padding: '10px 18px' }}>{"\uD83D\uDCE7"} Share with CPA</button>
             <button onClick={onBack} style={btnSecondary}>{"\u2190"} New Analysis</button>
           </div>
@@ -138,6 +165,26 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
       </div>
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px" }}>
+
+        {/* Paid confirmation banner */}
+        {isPaid && (
+          <div style={{
+            ...cardStyle, marginBottom: 24, borderLeft: `4px solid ${colors.accent}`,
+            background: colors.accentLight, padding: '14px 20px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 18 }}>{"\u2705"}</span>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: colors.accent }}>Full Report Unlocked</div>
+                <div style={{ fontSize: 12, color: colors.textDim }}>All details visible below. Download PDF anytime.</div>
+              </div>
+            </div>
+            <button onClick={() => generatePDF(r, formData, unitCostDetail, depSchedule)} style={{ ...btnPrimary, fontSize: 13, padding: '10px 20px' }}>
+              {"\uD83D\uDCC4"} Download PDF Report
+            </button>
+          </div>
+        )}
 
         {/* Prepared For Header */}
         <div style={{ ...cardStyle, marginBottom: 24, borderLeft: `4px solid ${colors.accent}` }}>
@@ -150,7 +197,7 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Report Date</div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{today}</div>
-              <div style={{ fontSize: 12, color: colors.textDim, marginTop: 2 }}>Preliminary Estimate</div>
+              <div style={{ fontSize: 12, color: colors.textDim, marginTop: 2 }}>{isPaid ? 'Full Report' : 'Preliminary Estimate'}</div>
             </div>
           </div>
           <div className="csp-results-meta" style={{ borderTop: `1px solid ${colors.cardBorder}`, marginTop: 16, paddingTop: 12, display: 'flex', gap: 32, flexWrap: 'wrap' }}>
@@ -186,7 +233,7 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
           </div>
         </div>
 
-        {/* Year 1 Depreciation Comparison — moved up right under confidence */}
+        {/* Year 1 Depreciation Comparison */}
         <div style={{ ...cardStyle, marginBottom: 24 }}>
           <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Year 1 Depreciation Comparison</div>
           <div className="csp-results-compare-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
@@ -207,10 +254,11 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
           </div>
         </div>
 
-        {/* Summary Cards — Total Segregated and Year 1 Bonus only (NPV in paid report) */}
+        {/* Summary Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 24 }}>
           <StatCard label="Total Segregated" value={fmt(r.segregatedTotal)} sub={`${r.segregatedPct}% of depreciable basis`} color={colors.accent} />
           <StatCard label="Year 1 Bonus Deduction" value={fmt(r.bonusAmount)} sub={`At ${r.bonusRate}% bonus rate`} color={colors.gold} />
+          {isPaid && <StatCard label="5-Year NPV Benefit" value={fmt(r.npvBenefit)} sub={`At ${r.taxRate}% tax rate, 5% discount`} color={colors.blue} />}
         </div>
 
         {/* Allocation Breakdown */}
@@ -248,10 +296,17 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
           </div>
         </div>
 
-        {/* NOTE: 5-year PP detail and 15-year LI detail tables removed from free summary */}
-        {/* They are included in the paid PDF report only */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* PAID: Component Detail Tables                                      */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {isPaid && (
+          <div className="csp-results-component-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}>
+            <ComponentTable title="5-Year Personal Property" items={r.pp5Components} color={colors.accent} total={r.pp5Total} />
+            <ComponentTable title="15-Year Land Improvements" items={r.li15Components} color={colors.gold} total={r.li15Total} />
+          </div>
+        )}
 
-        {/* Depreciation Schedule — summary cards only */}
+        {/* Depreciation Schedule */}
         {depSchedule && depSchedule.length > 0 && (() => {
           const sumRange = (arr) => ({
             totalCS: arr.reduce((s, row) => s + row.totalCS, 0),
@@ -302,12 +357,83 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
                 ))}
               </div>
 
-              {/* Year-by-year detail available in paid report */}
-              <div style={{ textAlign: 'center', padding: '12px 16px', borderRadius: 10, background: `${colors.cardBorder}33`, border: `1px solid ${colors.cardBorder}` }}>
-                <div style={{ fontSize: 13, color: colors.textDim }}>
-                  Full year-by-year depreciation schedule included in CPA-ready report
+              {/* PAID: Year-by-year expandable table */}
+              {isPaid ? (
+                <>
+                  <div
+                    onClick={() => setShowFullSchedule(!showFullSchedule)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '12px 16px', borderRadius: 10, cursor: 'pointer',
+                      background: showFullSchedule ? `${colors.accent}12` : `${colors.cardBorder}44`,
+                      border: `1px solid ${showFullSchedule ? colors.accent + '44' : colors.cardBorder}`,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 600, color: showFullSchedule ? colors.accent : colors.textDim }}>
+                      Year-by-Year Detail
+                    </div>
+                    <div style={{
+                      fontSize: 16, color: showFullSchedule ? colors.accent : colors.textMuted,
+                      transform: showFullSchedule ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s',
+                    }}>{'\u25BE'}</div>
+                  </div>
+
+                  {showFullSchedule && (
+                    <div style={{ overflowX: 'auto', marginTop: 12 }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 420 }}>
+                        <thead>
+                          <tr style={{ borderBottom: `2px solid ${colors.accent}44` }}>
+                            {['Year', 'Total w/ CS', 'Total w/o CS', 'Benefit', '5-Yr PP', '15-Yr LI', `${r.buildingLife}-Yr Bldg`].map((h, i) => (
+                              <th key={i} style={{
+                                padding: '8px 6px', textAlign: i === 0 ? 'center' : 'right',
+                                fontWeight: 700, color: colors.textDim, fontSize: 10,
+                                textTransform: 'uppercase', letterSpacing: '0.04em',
+                              }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {depSchedule.map((row, i) => (
+                            <tr key={i} style={{
+                              borderBottom: `1px solid ${colors.cardBorder}`,
+                              background: i === 0 ? colors.accentLight : (i % 2 === 0 ? 'transparent' : `${colors.cardBorder}33`),
+                            }}>
+                              <td style={{ padding: '6px', textAlign: 'center', fontWeight: 600, color: colors.textDim, fontSize: 11 }}>{row.calendarYear}</td>
+                              <td style={{ padding: '6px', textAlign: 'right', fontWeight: 600 }}>{fmt(row.totalCS)}</td>
+                              <td style={{ padding: '6px', textAlign: 'right', color: colors.textMuted }}>{fmt(row.totalNoCS)}</td>
+                              <td style={{ padding: '6px', textAlign: 'right', fontWeight: 600, color: row.benefit > 0 ? colors.accent : row.benefit < 0 ? colors.red : colors.textMuted }}>
+                                {row.benefit > 0 ? '+' : ''}{fmt(row.benefit)}
+                              </td>
+                              <td style={{ padding: '6px', textAlign: 'right', color: row.dep5yr > 0 ? colors.accent : colors.textMuted, fontSize: 11 }}>{row.dep5yr > 0 ? fmt(row.dep5yr) : '\u2014'}</td>
+                              <td style={{ padding: '6px', textAlign: 'right', color: row.dep15yr > 0 ? colors.gold : colors.textMuted, fontSize: 11 }}>{row.dep15yr > 0 ? fmt(row.dep15yr) : '\u2014'}</td>
+                              <td style={{ padding: '6px', textAlign: 'right', color: colors.blue, fontSize: 11 }}>{fmt(row.depBuilding)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr style={{ borderTop: `2px solid ${colors.accent}44` }}>
+                            <td style={{ padding: '8px 6px', fontWeight: 700, fontSize: 11 }}>TOTAL</td>
+                            <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}>{fmt(total.totalCS)}</td>
+                            <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.textMuted }}>{fmt(total.totalNoCS)}</td>
+                            <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700, color: colors.accent }}>{fmt(total.benefit)}</td>
+                            <td colSpan={3} style={{ padding: '8px 6px', textAlign: 'right', fontSize: 10, color: colors.textMuted }}>
+                              Cumulative: {fmt(total.totalCS)}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '12px 16px', borderRadius: 10, background: `${colors.cardBorder}33`, border: `1px solid ${colors.cardBorder}` }}>
+                  <div style={{ fontSize: 13, color: colors.textDim }}>
+                    Full year-by-year depreciation schedule included in CPA-ready report
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           );
         })()}
@@ -390,76 +516,110 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* PURCHASE CPA-READY REPORT CTA                                     */}
+        {/* PURCHASE or DOWNLOAD CTA                                           */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        <div style={{
-          ...cardStyle,
-          marginBottom: 24,
-          background: `linear-gradient(135deg, ${colors.accent}08, ${colors.accent}03)`,
-          border: `2px solid ${colors.accent}44`,
-          textAlign: 'center',
-          padding: '32px 24px',
-        }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: colors.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
-            Full Report Available
-          </div>
-          <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 28, fontWeight: 400, color: colors.text, marginBottom: 8, letterSpacing: '-0.02em' }}>
-            Get Your CPA-Ready Report
-          </div>
-          <div style={{ fontSize: 14, color: colors.textDim, maxWidth: 520, margin: '0 auto 24px', lineHeight: 1.6 }}>
-            A comprehensive, professionally formatted PDF report ready to share with your tax advisor.
-          </div>
-
-          {/* What's included grid */}
-          <div className="csp-report-includes" style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
-            textAlign: 'left', maxWidth: 560, margin: '0 auto 28px',
+        {!isPaid && (
+          <div style={{
+            ...cardStyle,
+            marginBottom: 24,
+            background: `linear-gradient(135deg, ${colors.accent}08, ${colors.accent}03)`,
+            border: `2px solid ${colors.accent}44`,
+            textAlign: 'center',
+            padding: '32px 24px',
           }}>
-            {[
-              { icon: '\uD83D\uDCCA', text: '5-year depreciation comparison chart' },
-              { icon: '\uD83D\uDD0D', text: 'Detailed personal property breakdown' },
-              { icon: '\uD83C\uDF3F', text: 'Land improvement cost detail' },
-              { icon: '\uD83D\uDCCB', text: 'Full multi-year depreciation schedule' },
-              { icon: '\u2696\uFE0F', text: 'IRS methodology & tax references' },
-              { icon: '\uD83D\uDCC4', text: 'NPV benefit analysis' },
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
-                <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
-                <span style={{ fontSize: 13, color: colors.textDim }}>{item.text}</span>
-              </div>
-            ))}
-          </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: colors.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+              Full Report Available
+            </div>
+            <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 28, fontWeight: 400, color: colors.text, marginBottom: 8, letterSpacing: '-0.02em' }}>
+              Get Your CPA-Ready Report
+            </div>
+            <div style={{ fontSize: 14, color: colors.textDim, maxWidth: 520, margin: '0 auto 24px', lineHeight: 1.6 }}>
+              A comprehensive, professionally formatted PDF report ready to share with your tax advisor.
+            </div>
 
-          <button
-            onClick={handlePurchaseReport}
-            disabled={checkoutLoading}
-            style={{
-              ...btnPrimary,
-              fontSize: 16,
-              padding: '16px 40px',
-              background: isPaid ? colors.accent : colors.accent,
-              boxShadow: '0 4px 20px rgba(26,127,90,0.3)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              opacity: checkoutLoading ? 0.7 : 1,
-              cursor: checkoutLoading ? 'wait' : 'pointer',
-            }}
-          >
-            {checkoutLoading ? 'Redirecting to checkout...' : isPaid ? '\uD83D\uDCC4 Download CPA-Ready Report' : '\uD83D\uDCC4 Purchase CPA-Ready Report'}
-          </button>
-          <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 12 }}>
-            {isPaid ? 'Your report is ready — download anytime' : `Instant PDF download ${"\u00B7"} Share directly with your CPA`}
+            {/* What's included grid */}
+            <div className="csp-report-includes" style={{
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
+              textAlign: 'left', maxWidth: 560, margin: '0 auto 28px',
+            }}>
+              {[
+                { icon: '\uD83D\uDCCA', text: '5-year depreciation comparison chart' },
+                { icon: '\uD83D\uDD0D', text: 'Detailed personal property breakdown' },
+                { icon: '\uD83C\uDF3F', text: 'Land improvement cost detail' },
+                { icon: '\uD83D\uDCCB', text: 'Full multi-year depreciation schedule' },
+                { icon: '\u2696\uFE0F', text: 'IRS methodology & tax references' },
+                { icon: '\uD83D\uDCC4', text: 'NPV benefit analysis' },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+                  <span style={{ fontSize: 13, color: colors.textDim }}>{item.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={handlePurchaseReport}
+              disabled={checkoutLoading}
+              style={{
+                ...btnPrimary,
+                fontSize: 16,
+                padding: '16px 40px',
+                background: colors.accent,
+                boxShadow: '0 4px 20px rgba(26,127,90,0.3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                opacity: checkoutLoading ? 0.7 : 1,
+                cursor: checkoutLoading ? 'wait' : 'pointer',
+              }}
+            >
+              {checkoutLoading ? 'Redirecting to checkout...' : '\uD83D\uDCC4 Purchase CPA-Ready Report'}
+            </button>
+
+            {/* Promo code */}
+            <div style={{ marginTop: 20 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={e => { setPromoCode(e.target.value); setPromoError(''); }}
+                  placeholder="Promo code"
+                  onKeyDown={e => e.key === 'Enter' && handlePromoCode()}
+                  style={{
+                    padding: '8px 12px', borderRadius: 8, fontSize: 13,
+                    border: `1.5px solid ${promoError ? colors.red + '66' : colors.cardBorder}`,
+                    background: colors.card, color: colors.text, fontFamily: 'inherit',
+                    outline: 'none', width: 160,
+                  }}
+                />
+                <button
+                  onClick={handlePromoCode}
+                  disabled={promoLoading}
+                  style={{
+                    ...btnSecondary, fontSize: 13, padding: '8px 16px',
+                    opacity: promoLoading ? 0.6 : 1,
+                  }}
+                >
+                  {promoLoading ? '...' : 'Apply'}
+                </button>
+              </div>
+              {promoError && <div style={{ fontSize: 12, color: colors.red, marginTop: 6 }}>{promoError}</div>}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Bottom actions */}
         <div className="csp-results-bottom-cta" style={{ textAlign: 'center', padding: '24px 0', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 12 }}>
+          {isPaid && (
+            <button onClick={() => generatePDF(r, formData, unitCostDetail, depSchedule)} style={{ ...btnPrimary, fontSize: 14, padding: '12px 24px' }}>
+              {"\uD83D\uDCC4"} Download PDF Report
+            </button>
+          )}
           <button onClick={handleShareCPA} style={{ ...btnSecondary, fontSize: 14, padding: '12px 24px' }}>
             {"\uD83D\uDCE7"} Share with CPA
           </button>
           <button onClick={() => window.print()} style={{ ...btnSecondary, fontSize: 14, padding: '12px 24px' }}>
-            {"\uD83D\uDDA8"} Print Summary
+            {"\uD83D\uDDA8"} Print
           </button>
           <button onClick={onBack} style={{ ...btnSecondary, fontSize: 14, padding: '12px 24px' }}>
             {"\u2190"} New Analysis
