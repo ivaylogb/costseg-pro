@@ -44,6 +44,7 @@ export default function App() {
     bedrooms: "3",
     bathrooms: "2",
     taxRate: "37",
+    is1031Exchange: false,
     // Renovation fields
     hasRenovation: false,
     renoOver10k: false,

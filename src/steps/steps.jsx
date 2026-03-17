@@ -115,8 +115,34 @@ export function StepProperty({ formData, update, errors = {} }) {
       {/* ── Purchase & Land Value ── */}
       {sectionLabel("Purchase Details")}
       <div style={{ display: "grid", gap: 14 }}>
+
+        {/* 1031 Exchange Toggle */}
+        <label style={{
+          display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+          padding: '10px 14px', borderRadius: 10,
+          background: formData.is1031Exchange ? colors.accentLight : `${colors.cardBorder}33`,
+          border: `1.5px solid ${formData.is1031Exchange ? colors.accent + '44' : colors.cardBorder}`,
+          transition: 'all 0.15s',
+        }}>
+          <input
+            type="checkbox"
+            checked={formData.is1031Exchange || false}
+            onChange={e => update("is1031Exchange", e.target.checked)}
+            style={{ width: 16, height: 16, accentColor: colors.accent, cursor: 'pointer' }}
+          />
+          <span style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>This purchase was part of a 1031 exchange</span>
+        </label>
+        {formData.is1031Exchange && (
+          <div style={{
+            padding: '10px 14px', borderRadius: 10, fontSize: 12, color: colors.textDim, lineHeight: 1.6,
+            background: `${colors.gold}08`, border: `1px solid ${colors.gold}22`,
+          }}>
+            Enter your <strong style={{ color: colors.text }}>new depreciable basis</strong> as the purchase price below and set land value to zero (or your allocated land value from closing docs).
+          </div>
+        )}
+
         <div className="csp-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="Purchase Price" value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder="$590,000" currency error={errors.purchasePrice} />
+          <Input label={formData.is1031Exchange ? "New Depreciable Basis" : "Purchase Price"} value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder={formData.is1031Exchange ? "$425,000" : "$590,000"} currency error={errors.purchasePrice} />
           <Input label="Year Purchased" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2025" numeric error={errors.yearPurchased} />
         </div>
 
@@ -856,7 +882,8 @@ export function StepReview({ formData, warnings = [] }) {
   const items = [
     ["Property Type", profile?.label],
     ["Address", [formData.address, formData.city, formData.state, formData.zip].filter(Boolean).join(", ") || "\u2014"],
-    ["Purchase Price", formData.purchasePrice ? "$" + parseFloat(formData.purchasePrice).toLocaleString("en-US") : "\u2014"],
+    formData.is1031Exchange && ["1031 Exchange", "Yes"],
+    [formData.is1031Exchange ? "New Depreciable Basis" : "Purchase Price", formData.purchasePrice ? "$" + parseFloat(formData.purchasePrice).toLocaleString("en-US") : "\u2014"],
     ["Land Value", formData.landValue ? "$" + parseFloat(formData.landValue).toLocaleString("en-US") : "\u2014"],
     ["Year Built", formData.yearBuilt || "\u2014"],
     ["Year Purchased", formData.yearPurchased || "\u2014"],
@@ -865,7 +892,7 @@ export function StepReview({ formData, warnings = [] }) {
     ["Property Features", features],
     ["Primary Flooring", flooringLabels[formData.flooringType] || "Not specified"],
     ["Tax Rate", formData.taxRate + "%"],
-  ];
+  ].filter(Boolean);
 
   // Add renovation info to review if present
   if (formData.hasRenovation) {
