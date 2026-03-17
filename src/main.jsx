@@ -12,6 +12,12 @@ function Router() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
+  // Detect Stripe checkout return and route to App
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('session_id') || params.get('payment')) {
+    return <App />
+  }
+
   if (route === '#/app') {
     return <App />
   }
