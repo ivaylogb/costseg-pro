@@ -118,21 +118,21 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   // Hero savings
   cy = 380;
   doc.setFillColor(...C.primary);
-  doc.roundedRect(margin, cy, contentW, 80, 6, 6, 'F');
+  doc.roundedRect(margin, cy, contentW, 96, 6, 6, 'F');
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(200, 255, 230);
-  doc.text('ESTIMATED FIRST-YEAR TAX SAVINGS', margin + 20, cy + 24);
+  doc.text('ESTIMATED FIRST-YEAR TAX SAVINGS', margin + 20, cy + 22);
   doc.setFontSize(36);
   doc.setTextColor(...C.white);
   doc.text(fmt(r.year1TaxSavings), margin + 20, cy + 58);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(200, 255, 230);
-  doc.text(r.bonusRate + '% bonus depreciation  |  ' + r.taxRate + '% marginal tax rate', margin + 20 + doc.getTextWidth(fmt(r.year1TaxSavings)) + 16, cy + 58);
+  doc.text(r.bonusRate + '% bonus depreciation  |  ' + r.taxRate + '% marginal tax rate', margin + 20, cy + 78);
 
   // Key metrics
-  cy = 500;
+  cy = 516;
   const metrics = [
     { label: 'Total Segregated', value: fmt(r.segregatedTotal), sub: r.segregatedPct + '% of basis' },
     { label: 'Bonus Deduction', value: fmt(r.bonusAmount), sub: r.bonusRate + '% rate' },
