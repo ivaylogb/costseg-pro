@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { runCostSegAnalysis } from './engine/engine';
 import { computeUnitCostBreakdown } from './engine/unitCosts';
 import { validateForm, getWarnings } from './engine/validation';
@@ -7,98 +7,52 @@ import { colors, btnPrimary, btnSecondary } from './theme';
 import { StepProperty, StepBuildingInfo, StepReview } from './steps/steps';
 import { ResultsDashboard } from './pages/Results';
 
-const STORAGE_KEY = 'costseg_form';
-const defaultFormData = {
-  propertyType: "single_family",
-  propertyName: "",
-  address: "",
-  city: "",
-  state: "CA",
-  zip: "",
-  purchasePrice: "",
-  landValue: "",
-  yearBuilt: "",
-  yearPurchased: String(new Date().getFullYear()),
-  sqft: "",
-  stories: "1",
-  buildingGrade: "standard",
-  hasPool: false,
-  isFurnished: false,
-  isShortTermRental: false,
-  hasHotTub: false,
-  hasFireplace: false,
-  numFireplaces: "1",
-  hasGameRoom: false,
-  hasDeck: false,
-  deckSize: "medium",
-  poolType: "inground_concrete",
-  flooringType: "default",
-  recentlyRenovated: false,
-  bedrooms: "3",
-  bathrooms: "2",
-  taxRate: "37",
-  hasRenovation: false,
-  renoOver10k: false,
-  renoMode: "total",
-  renoTotalAmount: "",
-  renovationItems: [],
-  renoIndirectType: "gc",
-  renoIndirectCustomRate: "",
-};
-
-function loadSavedForm() {
-  try {
-    const saved = sessionStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return { ...defaultFormData, ...parsed };
-    }
-  } catch {}
-  return defaultFormData;
-}
-
 export default function App() {
   const [step, setStep] = useState(0);
   const [results, setResults] = useState(null);
   const [unitCostDetail, setUnitCostDetail] = useState(null);
   const [depSchedule, setDepSchedule] = useState(null);
   const [errors, setErrors] = useState({});
-  const [formData, setFormData] = useState(loadSavedForm);
-  const skipPush = useRef(false);
-
-  // Persist form data to sessionStorage
-  useEffect(() => {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-  }, [formData]);
-
-  // Push browser history on step change
-  useEffect(() => {
-    if (skipPush.current) {
-      skipPush.current = false;
-      return;
-    }
-    window.history.pushState({ step }, '', window.location.hash || '#/app');
-  }, [step]);
-
-  // Handle browser back/forward buttons
-  useEffect(() => {
-    const onPopState = (e) => {
-      if (e.state && typeof e.state.step === 'number') {
-        skipPush.current = true;
-        setStep(e.state.step);
-        setErrors({});
-        if (e.state.step < 3) {
-          setResults(null);
-          setUnitCostDetail(null);
-          setDepSchedule(null);
-        }
-      }
-    };
-    window.addEventListener('popstate', onPopState);
-    // Replace initial history entry with step 0
-    window.history.replaceState({ step: 0 }, '', window.location.hash || '#/app');
-    return () => window.removeEventListener('popstate', onPopState);
-  }, []);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [disclaimerAgreed, setDisclaimerAgreed] = useState(false);
+  const [formData, setFormData] = useState({
+    propertyType: "single_family",
+    propertyName: "",
+    address: "",
+    city: "",
+    state: "CA",
+    zip: "",
+    purchasePrice: "",
+    landValue: "",
+    yearBuilt: "",
+    yearPurchased: String(new Date().getFullYear()),
+    sqft: "",
+    stories: "1",
+    buildingGrade: "standard",
+    hasPool: false,
+    isFurnished: false,
+    isShortTermRental: false,
+    hasHotTub: false,
+    hasFireplace: false,
+    numFireplaces: "1",
+    hasGameRoom: false,
+    hasDeck: false,
+    deckSize: "medium",
+    poolType: "inground_concrete",
+    flooringType: "default",
+    recentlyRenovated: false,
+    bedrooms: "3",
+    bathrooms: "2",
+    taxRate: "37",
+    // Renovation fields
+    hasRenovation: false,
+    renoOver10k: false,
+    renoMode: "total",        // "total" or "detailed"
+    renoTotalAmount: "",
+    renovationItems: [],
+    renoIndirectType: "gc",
+    renoIndirectCustomRate: "",
+  });
 
   const update = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -119,6 +73,11 @@ export default function App() {
   };
 
   const handleSubmit = () => {
+    setShowDisclaimer(true);
+  };
+
+  const handleDisclaimerConfirm = () => {
+    setShowDisclaimer(false);
     const r = runCostSegAnalysis(formData);
     const detail = computeUnitCostBreakdown(formData, r.depreciableBasis);
     const schedule = generateDepreciationSchedule(r, formData);
@@ -129,7 +88,7 @@ export default function App() {
   };
 
   if (step === 3 && results) {
-    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} depSchedule={depSchedule} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); setDepSchedule(null); sessionStorage.removeItem(STORAGE_KEY); setFormData(defaultFormData); }} />;
+    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} depSchedule={depSchedule} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); setDepSchedule(null); }} />;
   }
 
   const steps = [
@@ -216,6 +175,74 @@ export default function App() {
           )}
         </div>
       </div>
+
+      {/* Disclaimer Modal */}
+      {showDisclaimer && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: 24,
+        }}
+          onClick={() => setShowDisclaimer(false)}
+        >
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '28px 28px 24px', maxWidth: 480, width: '100%',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)', border: `1px solid ${colors.cardBorder}`,
+          }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{
+              fontWeight: 700, fontSize: 18, color: colors.text, marginBottom: 16,
+              paddingBottom: 12, borderBottom: `2px solid ${colors.accent}`,
+            }}>
+              Disclaimer Acknowledgement
+            </div>
+            <div style={{ fontSize: 14, color: colors.textDim, lineHeight: 1.7, marginBottom: 20 }}>
+              This tool provides <strong style={{ color: colors.text }}>preliminary estimates for planning purposes only</strong> and 
+              does not constitute a formal cost segregation study, tax advice, legal advice, or accounting advice. 
+              It is your responsibility and your tax professional's to determine the applicability of these estimates to your 
+              specific tax situation. CostSegPro assumes no liability for tax positions taken based on these results.
+              <br /><br />
+              If you have questions or need a sample report, contact us at{' '}
+              <a href="mailto:costsegplanning@gmail.com" style={{ color: colors.accent, fontWeight: 600 }}>
+                costsegplanning@gmail.com
+              </a>.
+            </div>
+            <label style={{
+              display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+              padding: '12px 14px', borderRadius: 10, background: disclaimerAgreed ? colors.accentLight : `${colors.cardBorder}44`,
+              border: `1.5px solid ${disclaimerAgreed ? colors.accent + '44' : colors.cardBorder}`,
+              marginBottom: 20, transition: 'all 0.15s',
+            }}>
+              <input
+                type="checkbox"
+                checked={disclaimerAgreed}
+                onChange={e => setDisclaimerAgreed(e.target.checked)}
+                style={{ width: 18, height: 18, accentColor: colors.accent, cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>I understand.</span>
+            </label>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => { setShowDisclaimer(false); setDisclaimerAgreed(false); }}
+                style={{ ...btnSecondary, flex: 1, padding: '12px 0', fontSize: 14 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDisclaimerConfirm}
+                disabled={!disclaimerAgreed}
+                style={{
+                  ...btnPrimary, flex: 1, padding: '12px 0', fontSize: 14,
+                  opacity: disclaimerAgreed ? 1 : 0.45, cursor: disclaimerAgreed ? 'pointer' : 'not-allowed',
+                }}
+              >
+                Confirm & Run Analysis
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
