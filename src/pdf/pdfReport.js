@@ -14,6 +14,15 @@ const C = {
   red: [192, 57, 43],
 };
 
+// Consistent table styles used everywhere
+const tableBase = {
+  fontSize: 9, cellPadding: 5, textColor: C.text,
+  lineColor: [226, 232, 240], lineWidth: 0.5,
+};
+const tableHead = { fillColor: C.text, textColor: C.white, fontStyle: 'bold', fontSize: 9 };
+const tableFoot = { fillColor: [236, 253, 245], fontStyle: 'bold', fontSize: 9 };
+const tableAlt = { fillColor: [252, 252, 253] };
+
 const fmt = (n) => "$" + (n || 0).toLocaleString("en-US");
 
 export function generatePDF(results, formData, unitCostDetail, depSchedule) {
@@ -115,24 +124,24 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   doc.setTextColor(...C.muted);
   doc.text(['Report Date: ' + today, 'Property Type: ' + r.propertyType + (r.isSTR ? ' (STR)' : ''), 'Purchase Price: ' + fmt(r.purchasePrice), 'Building Life: ' + r.buildingLife + ' Years'].join('   |   '), margin + 16, cy);
 
-  // Hero savings
+  // Hero savings — stacked layout
   cy = 380;
   doc.setFillColor(...C.primary);
-  doc.roundedRect(margin, cy, contentW, 96, 6, 6, 'F');
-  doc.setFontSize(11);
+  doc.roundedRect(margin, cy, contentW, 100, 6, 6, 'F');
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(200, 255, 230);
-  doc.text('ESTIMATED FIRST-YEAR TAX SAVINGS', margin + 20, cy + 22);
-  doc.setFontSize(36);
+  doc.text('ESTIMATED FIRST-YEAR TAX SAVINGS', margin + 20, cy + 20);
+  doc.setFontSize(38);
   doc.setTextColor(...C.white);
-  doc.text(fmt(r.year1TaxSavings), margin + 20, cy + 58);
-  doc.setFontSize(11);
+  doc.text(fmt(r.year1TaxSavings), margin + 20, cy + 60);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(200, 255, 230);
-  doc.text(r.bonusRate + '% bonus depreciation  |  ' + r.taxRate + '% marginal tax rate', margin + 20, cy + 78);
+  doc.text(r.bonusRate + '% bonus depreciation  |  ' + r.taxRate + '% marginal tax rate', margin + 20, cy + 82);
 
   // Key metrics
-  cy = 516;
+  cy = 520;
   const metrics = [
     { label: 'Total Segregated', value: fmt(r.segregatedTotal), sub: r.segregatedPct + '% of basis' },
     { label: 'Bonus Deduction', value: fmt(r.bonusAmount), sub: r.bonusRate + '% rate' },
@@ -156,7 +165,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
     doc.text(m.sub, x + 12 + (i > 0 ? 4 : 0), cy + 54);
   });
 
-  cy = 620;
+  cy = 630;
   doc.setFontSize(8);
   doc.setTextColor(...C.muted);
   const dLines = doc.splitTextToSize('This is a preliminary estimate for planning purposes only. It is not a formal cost segregation study and should not be attached to your tax return. Consult with your CPA or tax advisor before filing. CostSegPro assumes no liability for tax positions taken based on this estimate.', contentW);
@@ -184,10 +193,10 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
       ['Personal Property (IRC Section 1245)', '5-Year', '200% DB', fmt(r.pp5Total), r.pp5Pct + '%'],
     ],
     foot: [['Total', '', '', fmt(r.purchasePrice), '100%']],
-    styles: { fontSize: 9, cellPadding: 6, textColor: C.text, lineColor: [226, 232, 240], lineWidth: 0.5 },
-    headStyles: { fillColor: C.text, textColor: C.white, fontStyle: 'bold', fontSize: 9 },
-    footStyles: { fillColor: [248, 250, 252], fontStyle: 'bold', fontSize: 9 },
-    alternateRowStyles: { fillColor: [252, 252, 253] },
+    styles: tableBase,
+    headStyles: tableHead,
+    footStyles: tableFoot,
+    alternateRowStyles: tableAlt,
     columnStyles: { 3: { halign: 'right' }, 4: { halign: 'right' } },
   });
 
@@ -203,9 +212,9 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
       ['Without Cost Segregation', fmt(r.noCsYear1Dep), fmt(Math.round(r.noCsYear1Dep * r.taxRate / 100))],
       ['Additional Benefit', fmt(r.year1Benefit), fmt(r.year1TaxSavings)],
     ],
-    styles: { fontSize: 9, cellPadding: 6, textColor: C.text, lineColor: [226, 232, 240], lineWidth: 0.5 },
-    headStyles: { fillColor: C.text, textColor: C.white, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [252, 252, 253] },
+    styles: tableBase,
+    headStyles: tableHead,
+    alternateRowStyles: tableAlt,
     columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
     didParseCell: (data) => {
       if (data.row.index === 2 && data.section === 'body') {
@@ -238,9 +247,9 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
       ['Property Features', features],
       ['Tax Rate / Bonus Rate', r.taxRate + '% / ' + r.bonusRate + '%'],
     ],
-    styles: { fontSize: 9, cellPadding: 5, textColor: C.text, lineColor: [226, 232, 240], lineWidth: 0.5 },
+    styles: tableBase,
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 160, textColor: C.muted }, 1: { cellWidth: contentW - 160 } },
-    alternateRowStyles: { fillColor: [252, 252, 253] },
+    alternateRowStyles: tableAlt,
   });
 
   addFooter();
@@ -273,13 +282,13 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
       return { year: row.calendarYear, withCS: cumCS, withoutCS: cumNoCS };
     });
     const maxVal = Math.max(...cumData.map(d => Math.max(d.withCS, d.withoutCS)));
-    const scale = chartH / (maxVal * 1.15); // 15% headroom
+    const scale = chartH / (maxVal * 1.15);
 
     // Draw axes
     doc.setDrawColor(200, 200, 200);
     doc.setLineWidth(0.5);
-    doc.line(chartX, y, chartX, chartBottom); // Y axis
-    doc.line(chartX, chartBottom, chartX + chartW, chartBottom); // X axis
+    doc.line(chartX, y, chartX, chartBottom);
+    doc.line(chartX, chartBottom, chartX + chartW, chartBottom);
 
     // Y-axis labels
     const gridLines = 5;
@@ -307,7 +316,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
       doc.setFillColor(...C.primary);
       doc.roundedRect(groupX, chartBottom - hCS, barW, hCS, 2, 2, 'F');
 
-      // Bar: Without CS (light gray/red)
+      // Bar: Without CS (gray)
       const hNoCS = d.withoutCS * scale;
       doc.setFillColor(200, 210, 220);
       doc.roundedRect(groupX + barW + gap, chartBottom - hNoCS, barW, hNoCS, 2, 2, 'F');
@@ -360,9 +369,9 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
         ['5-Year Cumulative Deductions', fmt(Math.round(total5CS)), fmt(Math.round(total5NoCS)), fmt(Math.round(total5Benefit))],
         ['5-Year Tax Savings (at ' + r.taxRate + '%)', fmt(Math.round(total5CS * r.taxRate / 100)), fmt(Math.round(total5NoCS * r.taxRate / 100)), fmt(Math.round(total5Benefit * r.taxRate / 100))],
       ],
-      styles: { fontSize: 8.5, cellPadding: 5, textColor: C.text, lineColor: [226, 232, 240], lineWidth: 0.5 },
-      headStyles: { fillColor: C.text, textColor: C.white, fontStyle: 'bold', fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 253] },
+      styles: { ...tableBase, fontSize: 8.5 },
+      headStyles: { ...tableHead, fontSize: 8 },
+      alternateRowStyles: tableAlt,
       columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right', fontStyle: 'bold' } },
       didParseCell: (data) => {
         if (data.column.index === 3 && data.section === 'body') {
@@ -402,10 +411,10 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
       head: [['Description', 'Est. Qty', 'Unit Cost', 'Base Cost', 'Allocated Cost']],
       body: rows5,
       foot: [['Total 5-Year Personal Property', '', '', '', fmt(total5)]],
-      styles: { fontSize: 8, cellPadding: 4, textColor: C.text, lineColor: [226, 232, 240], lineWidth: 0.5, overflow: 'linebreak' },
-      headStyles: { fillColor: C.primary, textColor: C.white, fontStyle: 'bold', fontSize: 8 },
-      footStyles: { fillColor: [236, 253, 245], fontStyle: 'bold', fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 253] },
+      styles: { ...tableBase, fontSize: 8, cellPadding: 4, overflow: 'linebreak' },
+      headStyles: { ...tableHead, fontSize: 8 },
+      footStyles: tableFoot,
+      alternateRowStyles: tableAlt,
       columnStyles: { 0: { cellWidth: 200 }, 1: { halign: 'center', cellWidth: 60 }, 2: { halign: 'right', cellWidth: 70 }, 3: { halign: 'right', cellWidth: 75 }, 4: { halign: 'right', cellWidth: 80 } },
     });
 
@@ -429,10 +438,10 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
       head: [['Description', 'Est. Qty', 'Unit Cost', 'Base Cost', 'Allocated Cost']],
       body: rows15,
       foot: [['Total 15-Year Land Improvements', '', '', '', fmt(total15)]],
-      styles: { fontSize: 8, cellPadding: 4, textColor: C.text, lineColor: [226, 232, 240], lineWidth: 0.5, overflow: 'linebreak' },
-      headStyles: { fillColor: C.gold, textColor: C.white, fontStyle: 'bold', fontSize: 8 },
-      footStyles: { fillColor: [254, 252, 232], fontStyle: 'bold', fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 253] },
+      styles: { ...tableBase, fontSize: 8, cellPadding: 4, overflow: 'linebreak' },
+      headStyles: { ...tableHead, fontSize: 8 },
+      footStyles: tableFoot,
+      alternateRowStyles: tableAlt,
       columnStyles: { 0: { cellWidth: 200 }, 1: { halign: 'center', cellWidth: 60 }, 2: { halign: 'right', cellWidth: 70 }, 3: { halign: 'right', cellWidth: 75 }, 4: { halign: 'right', cellWidth: 80 } },
     });
     addFooter();
@@ -451,7 +460,6 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
     y = bodyText(y, 'MACRS depreciation by asset class. 5-year and 15-year property use half-year convention. Building uses mid-month convention. Bonus depreciation of ' + r.bonusRate + '% is included in Year 1 for eligible property.', { size: 8.5, color: C.muted });
     y += 4;
 
-    // Show first 15 years (or all if less), then cumulative
     const showYears = depSchedule.slice(0, 15);
     const schedRows = showYears.map(row => [
       row.year.toString(),
@@ -465,7 +473,6 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
       fmt(row.taxSavings),
     ]);
 
-    // Add totals row
     const sumRows = showYears;
     const sum = (fn) => sumRows.reduce((s, row) => s + fn(row), 0);
 
@@ -475,10 +482,10 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
       head: [['Yr', 'Cal. Yr', '5-Yr PP', '15-Yr LI', r.buildingLife + '-Yr Bldg', 'Total w/ CS', 'Total w/o CS', 'Benefit', 'Tax Savings']],
       body: schedRows,
       foot: [[showYears.length + '-Yr Total', '', fmt(sum(r => r.dep5yr)), fmt(sum(r => r.dep15yr)), fmt(sum(r => r.depBuilding)), fmt(sum(r => r.totalCS)), fmt(sum(r => r.totalNoCS)), fmt(sum(r => r.benefit)), fmt(sum(r => r.taxSavings))]],
-      styles: { fontSize: 7, cellPadding: 3, textColor: C.text, lineColor: [226, 232, 240], lineWidth: 0.5 },
-      headStyles: { fillColor: C.text, textColor: C.white, fontStyle: 'bold', fontSize: 7 },
-      footStyles: { fillColor: [236, 253, 245], fontStyle: 'bold', fontSize: 7 },
-      alternateRowStyles: { fillColor: [252, 252, 253] },
+      styles: { ...tableBase, fontSize: 7, cellPadding: 3 },
+      headStyles: { ...tableHead, fontSize: 7 },
+      footStyles: { ...tableFoot, fontSize: 7 },
+      alternateRowStyles: tableAlt,
       columnStyles: {
         0: { halign: 'center', cellWidth: 24 },
         1: { halign: 'center', cellWidth: 44 },
@@ -491,7 +498,6 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
         8: { halign: 'right' },
       },
       didParseCell: (data) => {
-        // Highlight year 1
         if (data.row.index === 0 && data.section === 'body') {
           data.cell.styles.fillColor = [236, 253, 245];
         }

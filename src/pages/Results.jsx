@@ -306,6 +306,110 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
           </div>
         )}
 
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* PAID: 5-Year Cumulative Deductions Chart                           */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {isPaid && depSchedule && depSchedule.length >= 5 && (() => {
+          let cumCS = 0, cumNoCS = 0;
+          const cumData = depSchedule.slice(0, 5).map(row => {
+            cumCS += row.totalCS;
+            cumNoCS += row.totalNoCS;
+            return { year: row.calendarYear, withCS: cumCS, withoutCS: cumNoCS };
+          });
+          const maxVal = Math.max(...cumData.map(d => d.withCS));
+
+          return (
+            <div style={{ ...cardStyle, marginBottom: 24 }}>
+              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>5-Year Cumulative Deductions</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 20 }}>Total depreciation deductions with cost segregation vs. straight-line only</div>
+
+              <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', justifyContent: 'center', marginBottom: 16, height: 200 }}>
+                {cumData.map((d, i) => {
+                  const hCS = maxVal > 0 ? (d.withCS / maxVal) * 180 : 0;
+                  const hNoCS = maxVal > 0 ? (d.withoutCS / maxVal) * 180 : 0;
+                  return (
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1, maxWidth: 100 }}>
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 180 }}>
+                        <div style={{ width: 28, height: hCS, background: colors.accent, borderRadius: '4px 4px 0 0', position: 'relative' }}>
+                          <div style={{ position: 'absolute', top: -16, left: '50%', transform: 'translateX(-50%)', fontSize: 9, fontWeight: 700, color: colors.accent, whiteSpace: 'nowrap' }}>{fmt(Math.round(d.withCS))}</div>
+                        </div>
+                        <div style={{ width: 28, height: hNoCS, background: colors.cardBorder, borderRadius: '4px 4px 0 0', position: 'relative' }}>
+                          <div style={{ position: 'absolute', top: -16, left: '50%', transform: 'translateX(-50%)', fontSize: 9, fontWeight: 600, color: colors.textMuted, whiteSpace: 'nowrap' }}>{fmt(Math.round(d.withoutCS))}</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: colors.textDim }}>Yr {i + 1}</div>
+                      <div style={{ fontSize: 9, color: colors.textMuted }}>{d.year}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Legend */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 24, fontSize: 12, color: colors.textDim }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: 3, background: colors.accent }} />
+                  With Cost Seg
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: 3, background: colors.cardBorder }} />
+                  Without Cost Seg
+                </div>
+              </div>
+
+              {/* Summary row */}
+              <div style={{ borderTop: `1px solid ${colors.cardBorder}`, marginTop: 16, paddingTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, textAlign: 'center' }}>
+                <div>
+                  <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>5-Yr with CS</div>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>{fmt(Math.round(cumData[4].withCS))}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>5-Yr without</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: colors.textDim }}>{fmt(Math.round(cumData[4].withoutCS))}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: colors.accent, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, fontWeight: 600 }}>5-Yr Benefit</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: colors.accent }}>+{fmt(Math.round(cumData[4].withCS - cumData[4].withoutCS))}</div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* PAID: Property Details Table                                       */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {isPaid && (() => {
+          const isRes = ["single_family", "condo", "multifamily", "apartment"].includes(formData.propertyType);
+          const featuresList = [formData.isShortTermRental && "STR", formData.isFurnished && "Furnished", formData.hasPool && "Pool", formData.hasHotTub && "Hot Tub", formData.hasFireplace && (formData.numFireplaces || 1) + " Fireplace(s)", formData.hasGameRoom && "Game Room", formData.hasDeck && "Deck", formData.recentlyRenovated && "Renovated"].filter(Boolean).join(', ') || 'None';
+          const details = [
+            ['Property Type', r.propertyType + (r.isSTR ? ' (Short-Term Rental)' : '')],
+            ['Address', address || 'Not provided'],
+            ['Purchase Price', fmt(r.purchasePrice)],
+            ['Land Value', fmt(r.landValue)],
+            ['Depreciable Basis', fmt(r.depreciableBasis)],
+            ['Year Built', formData.yearBuilt || 'N/A'],
+            ['Year Purchased', formData.yearPurchased || 'N/A'],
+            ['Square Footage', formData.sqft ? parseInt(formData.sqft).toLocaleString() + ' SF' : 'N/A'],
+            ['Building Grade', (formData.buildingGrade || 'standard').charAt(0).toUpperCase() + (formData.buildingGrade || 'standard').slice(1)],
+            ['Building Recovery Period', r.buildingLife + ' Years' + (r.isSTR && isRes ? ' (Transient Basis)' : '')],
+            ['Property Features', featuresList],
+            ['Tax Rate / Bonus Rate', r.taxRate + '% / ' + r.bonusRate + '%'],
+          ];
+          return (
+            <div style={{ ...cardStyle, marginBottom: 24 }}>
+              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Property Details</div>
+              <div style={{ display: 'grid', gap: 0 }}>
+                {details.map(([label, value], i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < details.length - 1 ? `1px solid ${colors.cardBorder}` : 'none' }}>
+                    <span style={{ fontSize: 13, color: colors.textMuted, fontWeight: 600 }}>{label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, textAlign: 'right' }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Depreciation Schedule */}
         {depSchedule && depSchedule.length > 0 && (() => {
           const sumRange = (arr) => ({
