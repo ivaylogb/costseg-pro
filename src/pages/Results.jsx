@@ -90,7 +90,7 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
       const data = await res.json();
       if (data.url) {
         // Save form data so we can restore after Stripe redirect
-        sessionStorage.setItem('csp_formData', JSON.stringify(formData));
+        localStorage.setItem('csp_formData', JSON.stringify(formData));
         window.location.href = data.url;
       } else {
         alert('Unable to start checkout. Please try again.');

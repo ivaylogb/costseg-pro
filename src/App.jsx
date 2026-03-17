@@ -63,7 +63,7 @@ export default function App() {
 
     if (sessionId && paymentStatus === 'success') {
       try {
-        const saved = sessionStorage.getItem('csp_formData');
+        const saved = localStorage.getItem('csp_formData');
         if (saved) {
           const savedForm = JSON.parse(saved);
           setFormData(savedForm);
@@ -74,6 +74,8 @@ export default function App() {
           setUnitCostDetail(detail);
           setDepSchedule(schedule);
           setStep(3);
+        } else {
+          console.warn('CostSegPro: No saved form data found after Stripe return');
         }
       } catch (err) {
         console.error('Failed to restore session:', err);
@@ -82,7 +84,7 @@ export default function App() {
 
     if (paymentStatus === 'cancelled') {
       try {
-        const saved = sessionStorage.getItem('csp_formData');
+        const saved = localStorage.getItem('csp_formData');
         if (saved) {
           const savedForm = JSON.parse(saved);
           setFormData(savedForm);
@@ -93,7 +95,7 @@ export default function App() {
           setUnitCostDetail(detail);
           setDepSchedule(schedule);
           setStep(3);
-          sessionStorage.removeItem('csp_formData');
+          localStorage.removeItem('csp_formData');
         }
       } catch (err) {
         console.error('Failed to restore session:', err);
