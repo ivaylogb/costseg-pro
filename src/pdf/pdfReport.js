@@ -168,7 +168,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   cy = 630;
   doc.setFontSize(8);
   doc.setTextColor(...C.muted);
-  const dLines = doc.splitTextToSize('This is a preliminary estimate for planning purposes only. It is not a formal cost segregation study and should not be attached to your tax return. Consult with your CPA or tax advisor before filing. CostSegPro assumes no liability for tax positions taken based on this estimate.', contentW);
+  const dLines = doc.splitTextToSize('This report is prepared using IRS-recognized methodology and Federal tax guidelines. Accuracy depends on the property information provided by the owner. Consult with your CPA or tax advisor for filing decisions.', contentW);
   doc.text(dLines, margin, cy);
   addFooter();
 
@@ -546,7 +546,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   y = 50;
   y = sectionHeading(y, 'Important Disclaimer');
 
-  ['This is a preliminary estimate for planning purposes only. It is not a formal cost segregation study and should not be attached to your tax return.', 'For filing purposes, consult with your CPA or tax advisor. A formal engineering-based study with a site inspection may be required for larger properties or if selected for IRS examination.', 'This analysis does not constitute tax, legal, or accounting advice. CostSegPro assumes no liability for tax positions taken based on this estimate.', 'Information used to prepare this estimate was provided by the property owner and was not audited or reviewed by CostSegPro.', 'Tax-Related Disclaimer: Any federal tax advice contained herein was not intended or written to be used for the purpose of avoiding penalties under the Internal Revenue Code or promoting any transaction addressed herein, in accordance with U.S. Treasury regulations governing tax practice.'].forEach(function(text) { y = bodyText(y, text, { size: 9.5, color: C.text }); y += 8; });
+  ['This report was prepared using the Replacement Cost New Less Depreciation (RCNLD) methodology and MACRS classification standards, which are recognized by the IRS as appropriate methods for cost segregation analysis.', 'The accuracy of this analysis is based on the property information provided by the owner. CostSegPro did not independently verify or audit this information. It is the owner\u2019s responsibility to ensure inputs are correct and complete.', 'It is the responsibility of the property owner and their tax professional to determine the applicability of this report at the individual state level and to their specific tax situation.', 'CostSegPro is not a licensed CPA, tax attorney, or enrolled agent. This report does not constitute individualized tax, legal, or accounting advice.', 'Circular 230 Notice: Any federal tax information provided herein is not intended or written to be used, and cannot be used, for the purpose of avoiding penalties under the Internal Revenue Code.'].forEach(function(text) { y = bodyText(y, text, { size: 9.5, color: C.text }); y += 8; });
 
   y += 20;
   doc.setDrawColor(...C.light);

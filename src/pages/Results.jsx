@@ -609,11 +609,7 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
             <div>
               <div style={{ fontWeight: 700, fontSize: 14, color: colors.gold, marginBottom: 6 }}>Important Disclaimer</div>
               <div style={{ fontSize: 13, color: colors.textDim, lineHeight: 1.6 }}>
-                This is a <strong style={{ color: colors.text }}>preliminary estimate</strong> for planning purposes only. It is not a formal 
-                cost segregation study and should not be attached to your tax return. The allocations are based on industry benchmarks and the 
-                property characteristics you provided. For filing purposes, consult with your CPA or tax advisor. A formal engineering-based 
-                study with a site inspection may be required for larger properties or if selected for audit. This analysis does not constitute 
-                tax, legal, or accounting advice. CostSegPro assumes no liability for tax positions taken based on this estimate.
+                This report is prepared using <strong style={{ color: colors.text }}>IRS-recognized RCNLD methodology</strong> and MACRS classification standards in accordance with Federal tax guidelines. The accuracy of this analysis depends on the property information you provided. It is your responsibility and your tax professional's to verify inputs and determine applicability to your specific tax and state-level situation. CostSegPro is not a licensed CPA or tax advisor.
               </div>
             </div>
           </div>
