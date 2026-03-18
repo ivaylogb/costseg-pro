@@ -466,9 +466,102 @@ export function StepBuildingInfo({ formData, update, errors = {} }) {
                 ]} />
               </div>
             )}
+
+            {/* ─── Extra Accuracy Fields ─── */}
+            <ExtraAccuracySection formData={formData} update={update} />
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── EXTRA ACCURACY SECTION (nested inside Advanced Details) ─────────────────
+function ExtraAccuracySection({ formData, update }) {
+  const [open, setOpen] = useState(false);
+
+  const cabinetryLabels = {
+    standard: "Stock / Builder Grade",
+    semi_custom: "Semi-Custom",
+    custom_wood: "Custom Built Wood Cabinets",
+  };
+  const countertopLabels = {
+    standard: "Laminate / Formica",
+    granite: "Granite",
+    quartz: "Quartz",
+    marble: "Marble / Stone",
+    butcher_block: "Butcher Block",
+    tile: "Tile",
+  };
+
+  return (
+    <div>
+      <div
+        onClick={() => setOpen(!open)}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "12px 16px", borderRadius: 10, cursor: "pointer",
+          background: open ? `${colors.accent}12` : colors.card,
+          border: `1.5px solid ${open ? colors.accent + "44" : colors.inputBorder}`,
+          transition: "all 0.2s",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{
+            width: 24, height: 24, borderRadius: 6,
+            background: open ? `${colors.accent}25` : `${colors.accent}10`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 12, color: colors.accent,
+          }}>&#10024;</div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 13, color: open ? colors.accent : colors.text }}>
+              Want more accuracy? Add details
+            </div>
+            <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>
+              Kitchen cabinets, countertops, window coverings
+            </div>
+          </div>
+        </div>
+        <div style={{
+          fontSize: 16, color: open ? colors.accent : colors.textMuted,
+          transition: "transform 0.2s",
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+        }}>&#9662;</div>
+      </div>
+
+      {open && (
+        <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+          <Select
+            label="Kitchen Cabinetry Grade"
+            value={formData.kitchenCabinetryGrade}
+            onChange={v => update("kitchenCabinetryGrade", v)}
+            options={Object.entries(cabinetryLabels).map(([value, label]) => ({ value, label }))}
+          />
+          <Select
+            label="Countertop Material"
+            value={formData.countertopMaterial}
+            onChange={v => update("countertopMaterial", v)}
+            options={Object.entries(countertopLabels).map(([value, label]) => ({ value, label }))}
+          />
+          <Toggle
+            label="Has window coverings (blinds, shutters, drapes)"
+            sub="Window coverings qualify as 5-year personal property"
+            checked={formData.hasWindowCoverings}
+            onChange={() => update("hasWindowCoverings", !formData.hasWindowCoverings)}
+          />
+          {formData.hasWindowCoverings && (
+            <div style={{ marginLeft: 34 }}>
+              <Input
+                label="Approximate Number of Windows with Coverings"
+                value={formData.windowCoveringsCount}
+                onChange={v => update("windowCoveringsCount", v)}
+                placeholder="e.g. 12"
+                numeric
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -891,6 +984,9 @@ export function StepReview({ formData, warnings = [] }) {
     ["Building Grade", formData.buildingGrade?.charAt(0).toUpperCase() + formData.buildingGrade?.slice(1)],
     ["Property Features", features],
     ["Primary Flooring", flooringLabels[formData.flooringType] || "Not specified"],
+    formData.kitchenCabinetryGrade && formData.kitchenCabinetryGrade !== "standard" && ["Kitchen Cabinetry", { standard: "Stock / Builder Grade", semi_custom: "Semi-Custom", custom_wood: "Custom Built Wood Cabinets" }[formData.kitchenCabinetryGrade]],
+    formData.countertopMaterial && formData.countertopMaterial !== "standard" && ["Countertop Material", { standard: "Laminate / Formica", granite: "Granite", quartz: "Quartz", marble: "Marble / Stone", butcher_block: "Butcher Block", tile: "Tile" }[formData.countertopMaterial]],
+    formData.hasWindowCoverings && ["Window Coverings", formData.windowCoveringsCount ? `Yes (${formData.windowCoveringsCount} windows)` : "Yes"],
     ["Tax Rate", formData.taxRate + "%"],
   ].filter(Boolean);
 

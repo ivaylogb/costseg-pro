@@ -53,6 +53,11 @@ export default function App() {
     renovationItems: [],
     renoIndirectType: "gc",
     renoIndirectCustomRate: "",
+    // Advanced detail fields (optional)
+    kitchenCabinetryGrade: "standard",
+    countertopMaterial: "standard",
+    hasWindowCoverings: false,
+    windowCoveringsCount: "",
   });
 
   // On mount: check if returning from Stripe checkout
