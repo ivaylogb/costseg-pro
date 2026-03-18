@@ -197,7 +197,7 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Report Date</div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{today}</div>
-              <div style={{ fontSize: 12, color: colors.textDim, marginTop: 2 }}>{isPaid ? 'Full Report' : 'Preliminary Estimate'}</div>
+              <div style={{ fontSize: 12, color: colors.textDim, marginTop: 2 }}>{isPaid ? 'Full Report' : 'Cost Segregation Analysis'}</div>
             </div>
           </div>
           <div className="csp-results-meta" style={{ borderTop: `1px solid ${colors.cardBorder}`, marginTop: 16, paddingTop: 12, display: 'flex', gap: 32, flexWrap: 'wrap' }}>
