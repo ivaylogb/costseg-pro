@@ -7,6 +7,59 @@ import { colors, btnPrimary, btnSecondary } from './theme';
 import { StepProperty, StepBuildingInfo, StepReview } from './steps/steps';
 import { ResultsDashboard } from './pages/Results';
 
+const DEFAULT_FORM = {
+  propertyType: "single_family",
+  propertyName: "",
+  address: "",
+  city: "",
+  state: "CA",
+  zip: "",
+  purchasePrice: "",
+  landValue: "",
+  yearBuilt: "",
+  yearPurchased: String(new Date().getFullYear()),
+  sqft: "",
+  stories: "1",
+  buildingGrade: "standard",
+  hasPool: false,
+  isFurnished: false,
+  isShortTermRental: false,
+  hasHotTub: false,
+  hasFireplace: false,
+  numFireplaces: "1",
+  hasGameRoom: false,
+  hasDeck: false,
+  deckSize: "medium",
+  poolType: "inground_concrete",
+  flooringType: "default",
+  recentlyRenovated: false,
+  bedrooms: "3",
+  bathrooms: "2",
+  taxRate: "37",
+  is1031Exchange: false,
+  // Renovation fields
+  hasRenovation: false,
+  renoOver10k: false,
+  renoMode: "total",        // "total" or "detailed"
+  renoTotalAmount: "",
+  renovationItems: [],
+  renoIndirectType: "gc",
+  renoIndirectCustomRate: "",
+  // Advanced detail fields (optional)
+  kitchenCabinetryGrade: "standard",
+  countertopMaterial: "standard",
+  hasWindowCoverings: false,
+  windowCoveringsCount: "",
+};
+
+function loadSavedForm() {
+  try {
+    const saved = localStorage.getItem('csp_formData');
+    if (saved) return { ...DEFAULT_FORM, ...JSON.parse(saved) };
+  } catch {}
+  return DEFAULT_FORM;
+}
+
 export default function App() {
   const [step, setStep] = useState(0);
   const [results, setResults] = useState(null);
@@ -15,50 +68,7 @@ export default function App() {
   const [errors, setErrors] = useState({});
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [disclaimerAgreed, setDisclaimerAgreed] = useState(false);
-  const [formData, setFormData] = useState({
-    propertyType: "single_family",
-    propertyName: "",
-    address: "",
-    city: "",
-    state: "CA",
-    zip: "",
-    purchasePrice: "",
-    landValue: "",
-    yearBuilt: "",
-    yearPurchased: String(new Date().getFullYear()),
-    sqft: "",
-    stories: "1",
-    buildingGrade: "standard",
-    hasPool: false,
-    isFurnished: false,
-    isShortTermRental: false,
-    hasHotTub: false,
-    hasFireplace: false,
-    numFireplaces: "1",
-    hasGameRoom: false,
-    hasDeck: false,
-    deckSize: "medium",
-    poolType: "inground_concrete",
-    flooringType: "default",
-    recentlyRenovated: false,
-    bedrooms: "3",
-    bathrooms: "2",
-    taxRate: "37",
-    is1031Exchange: false,
-    // Renovation fields
-    hasRenovation: false,
-    renoOver10k: false,
-    renoMode: "total",        // "total" or "detailed"
-    renoTotalAmount: "",
-    renovationItems: [],
-    renoIndirectType: "gc",
-    renoIndirectCustomRate: "",
-    // Advanced detail fields (optional)
-    kitchenCabinetryGrade: "standard",
-    countertopMaterial: "standard",
-    hasWindowCoverings: false,
-    windowCoveringsCount: "",
-  });
+  const [formData, setFormData] = useState(loadSavedForm);
 
   // On mount: check if returning from Stripe checkout
   useEffect(() => {
@@ -112,11 +122,26 @@ export default function App() {
   }, []);
 
   const update = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [field]: value };
+      localStorage.setItem('csp_formData', JSON.stringify(next));
+      return next;
+    });
     // Clear error for this field when user edits it
     if (errors[field]) {
       setErrors(prev => { const next = { ...prev }; delete next[field]; return next; });
     }
+  };
+
+  const handleStartOver = () => {
+    localStorage.removeItem('csp_formData');
+    setFormData(DEFAULT_FORM);
+    setStep(0);
+    setResults(null);
+    setUnitCostDetail(null);
+    setDepSchedule(null);
+    setErrors({});
+    window.scrollTo(0, 0);
   };
 
   const handleNext = () => {
@@ -147,7 +172,7 @@ export default function App() {
   };
 
   if (step === 3 && results) {
-    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} depSchedule={depSchedule} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); setDepSchedule(null); }} />;
+    return <ResultsDashboard results={results} formData={formData} unitCostDetail={unitCostDetail} depSchedule={depSchedule} onBack={() => { setStep(0); setResults(null); setUnitCostDetail(null); setDepSchedule(null); }} onStartOver={handleStartOver} />;
   }
 
   const steps = [
@@ -232,6 +257,11 @@ export default function App() {
               Run Cost Segregation Analysis →
             </button>
           )}
+        </div>
+        <div style={{ textAlign: "center", marginTop: 16 }}>
+          <button onClick={handleStartOver} style={{ background: "none", border: "none", color: colors.textMuted, fontSize: 12, cursor: "pointer", textDecoration: "underline", padding: 4 }}>
+            Clear form & start over
+          </button>
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import { colors, cardStyle, btnSecondary, btnPrimary, fmt } from '../theme';
 import { StatCard, AllocRow, ComponentTable } from '../components/components';
 import { generatePDF } from '../pdf/pdfReport';
 
-export function ResultsDashboard({ results: r, formData, unitCostDetail, depSchedule, photos = [], onBack }) {
+export function ResultsDashboard({ results: r, formData, unitCostDetail, depSchedule, photos = [], onBack, onStartOver }) {
   const [isPaid, setIsPaid] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [promoCode, setPromoCode] = useState('');
@@ -159,7 +159,8 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
               <button onClick={() => generatePDF(r, formData, unitCostDetail, depSchedule)} style={{ ...btnPrimary, fontSize: 13, padding: '10px 18px' }}>{"\uD83D\uDCC4"} Download PDF</button>
             )}
             <button onClick={handleShareCPA} style={{ ...btnSecondary, fontSize: 13, padding: '10px 18px' }}>{"\uD83D\uDCE7"} Share with CPA</button>
-            <button onClick={onBack} style={btnSecondary}>{"\u2190"} New Analysis</button>
+            <button onClick={onBack} style={btnSecondary}>{"\u2190"} Edit Inputs</button>
+            <button onClick={onStartOver} style={{ ...btnSecondary, color: colors.textMuted }}>{"\u21BB"} New Analysis</button>
           </div>
         </div>
       </div>
@@ -722,7 +723,10 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
             {"\uD83D\uDDA8"} Print
           </button>
           <button onClick={onBack} style={{ ...btnSecondary, fontSize: 14, padding: '12px 24px' }}>
-            {"\u2190"} New Analysis
+            {"\u2190"} Edit Inputs
+          </button>
+          <button onClick={onStartOver} style={{ ...btnSecondary, fontSize: 14, padding: '12px 24px', color: colors.textMuted }}>
+            {"\u21BB"} New Analysis
           </button>
         </div>
 
