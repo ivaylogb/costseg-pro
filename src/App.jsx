@@ -257,12 +257,9 @@ export default function App() {
               Disclaimer Acknowledgement
             </div>
             <div style={{ fontSize: 14, color: colors.textDim, lineHeight: 1.7, marginBottom: 20 }}>
-              This tool provides <strong style={{ color: colors.text }}>preliminary estimates for planning purposes only</strong> and 
-              does not constitute a formal cost segregation study, tax advice, legal advice, or accounting advice. 
-              It is your responsibility and your tax professional's to determine the applicability of these estimates to your 
-              specific tax situation. CostSegPro assumes no liability for tax positions taken based on these results.
+              This report is prepared using <strong style={{ color: colors.text }}>IRS-recognized methodology (RCNLD)</strong> and MACRS classification standards in accordance with Federal tax guidelines. The accuracy of this analysis is based on the property information you provided — it is your responsibility to ensure these inputs are correct and complete.
               <br /><br />
-              If you have questions or need a sample report, contact us at{' '}
+              It is the responsibility of you and your tax professional to determine the applicability of this report at the individual state level and to your specific tax situation. For questions or sample reports, contact us at{' '}
               <a href="mailto:costsegplanning@gmail.com" style={{ color: colors.accent, fontWeight: 600 }}>
                 costsegplanning@gmail.com
               </a>.
