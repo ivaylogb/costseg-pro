@@ -145,6 +145,16 @@ export function StepProperty({ formData, update, errors = {} }) {
           <Input label={formData.is1031Exchange ? "New Depreciable Basis" : "Purchase Price"} value={formData.purchasePrice} onChange={v => update("purchasePrice", v)} placeholder={formData.is1031Exchange ? "$425,000" : "$590,000"} currency error={errors.purchasePrice} />
           <Input label="Year Purchased" value={formData.yearPurchased} onChange={v => update("yearPurchased", v)} placeholder="2025" numeric error={errors.yearPurchased} />
         </div>
+        {parseInt(formData.yearPurchased) > 0 && parseInt(formData.yearPurchased) < new Date().getFullYear() && (
+          <Input
+            label="Year Placed in Service"
+            value={formData.yearPlacedInService}
+            onChange={v => update("yearPlacedInService", v)}
+            placeholder={formData.yearPurchased}
+            numeric
+            helper="The year the property was first available for rental use. This determines your bonus depreciation rate."
+          />
+        )}
 
         {/* Land Value — condos get simplified treatment */}
         {isCondo ? (
@@ -259,6 +269,7 @@ function QuickEstimate({ formData }) {
   const price = parseFloat((formData.purchasePrice || "").replace(/[$,\s]/g, "")) || 0;
   const land = parseFloat((formData.landValue || "").replace(/[$,\s]/g, "")) || 0;
   const yearPurchased = parseInt(formData.yearPurchased) || new Date().getFullYear();
+  const yearPIS = parseInt(formData.yearPlacedInService) || yearPurchased;
   const yearBuilt = parseInt(formData.yearBuilt) || 2000;
   const taxRate = 37; // assume default for quick estimate
 
@@ -271,16 +282,15 @@ function QuickEstimate({ formData }) {
   const profile = ALLOCATION_PROFILES[formData.propertyType] || ALLOCATION_PROFILES["single_family"];
   const age = new Date().getFullYear() - yearBuilt;
   const ageMult = age <= 5 ? 0.88 : age <= 10 ? 0.94 : age <= 20 ? 1.0 : age <= 30 ? 1.06 : age <= 40 ? 1.12 : 1.18;
-  
+
   const pp5Pct = Math.min(profile.pp5 * ageMult, 0.45);
   const li15Pct = Math.min(profile.li15 * ageMult, 0.30);
   const segregated = Math.round(basis * (pp5Pct + li15Pct));
   const buildingTotal = basis - segregated;
 
-  // Bonus depreciation
-  // OBBBA: 100% bonus permanent for property acquired after Jan 19, 2025
+  // Bonus depreciation — keyed to placed-in-service date per IRC 168(k)
   const bonusRates = { 2022: 1.0, 2023: 0.8, 2024: 0.6, 2025: 1.0 };
-  const bonusRate = bonusRates[yearPurchased] ?? (yearPurchased >= 2025 ? 1.0 : yearPurchased <= 2021 ? 1.0 : 0);
+  const bonusRate = bonusRates[yearPIS] ?? (yearPIS >= 2025 ? 1.0 : yearPIS <= 2021 ? 1.0 : 0);
   const bonusAmount = Math.round(segregated * bonusRate);
   const buildingLife = 27.5;
 
@@ -980,6 +990,7 @@ export function StepReview({ formData, warnings = [] }) {
     ["Land Value", formData.landValue ? "$" + parseFloat(formData.landValue).toLocaleString("en-US") : "\u2014"],
     ["Year Built", formData.yearBuilt || "\u2014"],
     ["Year Purchased", formData.yearPurchased || "\u2014"],
+    formData.yearPlacedInService && formData.yearPlacedInService !== formData.yearPurchased && ["Year Placed in Service", formData.yearPlacedInService],
     ["Square Footage", formData.sqft ? `${parseInt(formData.sqft).toLocaleString()} SF` : "\u2014"],
     ["Building Grade", formData.buildingGrade?.charAt(0).toUpperCase() + formData.buildingGrade?.slice(1)],
     ["Property Features", features],

@@ -214,11 +214,16 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: 13, color: colors.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Estimated First-Year Tax Savings</div>
           <div className="csp-results-hero-num" style={{ fontSize: 56, fontWeight: 800, letterSpacing: "-0.03em", color: colors.accent }}>
-            {fmt(r.year1TaxSavings)}
+            {r.year1TaxSavings > 0 ? fmt(r.year1TaxSavings) : "$0"}
           </div>
           <div style={{ fontSize: 14, color: colors.textDim, marginTop: 8 }}>
             {r.bonusRate}% bonus depreciation {"\u00B7"} {r.taxRate}% marginal tax rate
           </div>
+          {r.year1TaxSavings <= 0 && (
+            <div style={{ fontSize: 13, color: colors.blue, marginTop: 10, maxWidth: 500, margin: "10px auto 0", lineHeight: 1.5 }}>
+              With 0% bonus depreciation, cost segregation accelerates deductions in years 2–5 rather than Year 1. See the multi-year schedule for cumulative benefits.
+            </div>
+          )}
         </div>
 
         {/* Confidence Indicator */}
@@ -251,14 +256,19 @@ export function ResultsDashboard({ results: r, formData, unitCostDetail, depSche
           </div>
           <div style={{ textAlign: "center", marginTop: 16, padding: 16, borderRadius: 12, background: `${colors.gold}11`, border: `1px solid ${colors.gold}33` }}>
             <div style={{ fontSize: 12, color: colors.gold, fontWeight: 600 }}>ADDITIONAL YEAR 1 DEDUCTION</div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: colors.gold }}>{fmt(r.year1Benefit)}</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: colors.gold }}>{r.year1Benefit > 0 ? fmt(r.year1Benefit) : "$0"}</div>
+            {r.year1Benefit <= 0 && (
+              <div style={{ fontSize: 12, color: colors.textDim, marginTop: 6, lineHeight: 1.5 }}>
+                With 0% bonus depreciation, cost segregation accelerates deductions in years 2–5 rather than Year 1. See the multi-year schedule for cumulative benefits.
+              </div>
+            )}
           </div>
         </div>
 
         {/* Summary Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 24 }}>
           <StatCard label="Total Segregated" value={fmt(r.segregatedTotal)} sub={`${r.segregatedPct}% of depreciable basis`} color={colors.accent} />
-          <StatCard label="Year 1 Bonus Deduction" value={fmt(r.bonusAmount)} sub={`At ${r.bonusRate}% bonus rate`} color={colors.gold} />
+          <StatCard label="Year 1 Bonus Deduction" value={r.bonusAmount > 0 ? fmt(r.bonusAmount) : "$0"} sub={r.bonusAmount > 0 ? `At ${r.bonusRate}% bonus rate` : "No bonus depreciation available for this placed-in-service date"} color={colors.gold} />
           {isPaid && <StatCard label="5-Year NPV Benefit" value={fmt(r.npvBenefit)} sub={`At ${r.taxRate}% tax rate, 5% discount`} color={colors.blue} />}
         </div>
 

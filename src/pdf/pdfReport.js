@@ -129,20 +129,25 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   doc.text('Prepared by: CostSegPro  |  Automated RCNLD Cost Segregation Analysis  |  costsegplanning@gmail.com', margin + 16, cy);
 
   // Hero savings — stacked layout
+  var noYear1Benefit = r.year1TaxSavings <= 0;
   cy = 400;
   doc.setFillColor(...C.primary);
-  doc.roundedRect(margin, cy, contentW, 100, 6, 6, 'F');
+  doc.roundedRect(margin, cy, contentW, noYear1Benefit ? 115 : 100, 6, 6, 'F');
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(200, 255, 230);
   doc.text('ESTIMATED FIRST-YEAR TAX SAVINGS', margin + 20, cy + 20);
   doc.setFontSize(38);
   doc.setTextColor(...C.white);
-  doc.text(fmt(r.year1TaxSavings), margin + 20, cy + 60);
+  doc.text(noYear1Benefit ? '$0*' : fmt(r.year1TaxSavings), margin + 20, cy + 60);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(200, 255, 230);
   doc.text(r.bonusRate + '% bonus depreciation  |  ' + r.taxRate + '% marginal tax rate', margin + 20, cy + 82);
+  if (noYear1Benefit) {
+    doc.setFontSize(8);
+    doc.text('* With 0% bonus depreciation, benefits accrue in years 2\u20135 via accelerated MACRS schedules.', margin + 20, cy + 100);
+  }
 
   // Key metrics
   cy = 540;
@@ -220,6 +225,9 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   y = doc.lastAutoTable.finalY + 30;
   y = sectionHeading(y, 'Year 1 Depreciation Comparison');
 
+  var benefitLabel = r.year1Benefit > 0 ? fmt(r.year1Benefit) : '$0*';
+  var savingsLabel = r.year1TaxSavings > 0 ? fmt(r.year1TaxSavings) : '$0*';
+
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
@@ -227,7 +235,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
     body: [
       ['With Cost Segregation', fmt(r.csYear1Dep), fmt(Math.round(r.csYear1Dep * r.taxRate / 100))],
       ['Without Cost Segregation', fmt(r.noCsYear1Dep), fmt(Math.round(r.noCsYear1Dep * r.taxRate / 100))],
-      ['Additional Benefit', fmt(r.year1Benefit), fmt(r.year1TaxSavings)],
+      ['Additional Benefit', benefitLabel, savingsLabel],
     ],
     styles: tableBase,
     headStyles: tableHead,
@@ -240,6 +248,11 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
       }
     },
   });
+
+  if (r.year1Benefit <= 0) {
+    y = doc.lastAutoTable.finalY + 8;
+    y = bodyText(y, '* With 0% bonus depreciation, cost segregation accelerates deductions in years 2\u20135 rather than Year 1. See the multi-year depreciation schedule for cumulative benefits.', { size: 8, color: C.muted });
+  }
 
   addFooter();
 

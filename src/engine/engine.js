@@ -333,8 +333,9 @@ export function runCostSegAnalysis(data) {
     method: "150% DB",
   }));
 
-  // Bonus depreciation
-  const bonusRate = BONUS_RATES[yearPurchased] ?? (yearPurchased >= 2025 ? 1.00 : yearPurchased >= 2020 ? 1.00 : 0);
+  // Bonus depreciation — keyed to placed-in-service date per IRC 168(k)
+  const yearPIS = parseInt(formData.yearPlacedInService) || yearPurchased;
+  const bonusRate = BONUS_RATES[yearPIS] ?? (yearPIS >= 2025 ? 1.00 : yearPIS >= 2020 ? 1.00 : 0);
   const bonusAmount = Math.round(segregatedTotal * bonusRate);
 
   // Year 1 depreciation comparison

@@ -50,6 +50,7 @@ const DEFAULT_FORM = {
   countertopMaterial: "standard",
   hasWindowCoverings: false,
   windowCoveringsCount: "",
+  yearPlacedInService: "",
 };
 
 function loadSavedForm() {
