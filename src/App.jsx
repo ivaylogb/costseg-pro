@@ -162,14 +162,19 @@ export default function App() {
 
   const handleDisclaimerConfirm = () => {
     setShowDisclaimer(false);
-    const r = runCostSegAnalysis(formData);
-    const detail = computeUnitCostBreakdown(formData, r.depreciableBasis);
-    const schedule = generateDepreciationSchedule(r, formData);
-    setResults(r);
-    setUnitCostDetail(detail);
-    setDepSchedule(schedule);
-    setStep(3);
-    window.scrollTo(0, 0);
+    try {
+      const r = runCostSegAnalysis(formData);
+      const detail = computeUnitCostBreakdown(formData, r.depreciableBasis);
+      const schedule = generateDepreciationSchedule(r, formData);
+      setResults(r);
+      setUnitCostDetail(detail);
+      setDepSchedule(schedule);
+      setStep(3);
+      window.scrollTo(0, 0);
+    } catch (err) {
+      console.error('Analysis failed:', err);
+      alert('Analysis error: ' + err.message + '\n\nPlease check your inputs and try again.');
+    }
   };
 
   if (step === 3 && results) {
