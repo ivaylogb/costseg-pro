@@ -334,7 +334,7 @@ export function runCostSegAnalysis(data) {
   }));
 
   // Bonus depreciation — keyed to placed-in-service date per IRC 168(k)
-  const yearPIS = parseInt(formData.yearPlacedInService) || yearPurchased;
+  const yearPIS = parseInt(data.yearPlacedInService) || yearPurchased;
   const bonusRate = BONUS_RATES[yearPIS] ?? (yearPIS >= 2025 ? 1.00 : yearPIS >= 2020 ? 1.00 : 0);
   const bonusAmount = Math.round(segregatedTotal * bonusRate);
 
