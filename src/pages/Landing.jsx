@@ -207,7 +207,7 @@ export default function Landing() {
             <div style={{ display: 'flex', gap: 24 }}>
               <a href="#" style={{ color: '#5C5A54', textDecoration: 'none' }}>Privacy</a>
               <a href="#" style={{ color: '#5C5A54', textDecoration: 'none' }}>Terms</a>
-              <a href="mailto:hello@costsegnow.com" style={{ color: '#5C5A54', textDecoration: 'none' }}>Contact</a>
+              <a href="mailto:costsegplanning@gmail.com" style={{ color: '#5C5A54', textDecoration: 'none' }}>Contact</a>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', paddingTop: 16, borderTop: '1px solid #EDEBE7' }}>

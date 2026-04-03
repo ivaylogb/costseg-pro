@@ -92,7 +92,7 @@ export default function App() {
           setStep(3);
           window.scrollTo(0, 0);
         } else {
-          console.warn('CostSegPro: No saved form data found after Stripe return');
+          console.warn('CostSegNow: No saved form data found after Stripe return');
         }
       } catch (err) {
         console.error('Failed to restore session:', err);

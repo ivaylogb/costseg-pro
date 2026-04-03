@@ -41,7 +41,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
     pageNum++;
     doc.setFontSize(8);
     doc.setTextColor(...C.muted);
-    doc.text('CostSegPro | Cost Segregation Analysis Report | ' + propertyName, margin, pageH - 30);
+    doc.text('CostSegNow | Cost Segregation Analysis Report | ' + propertyName, margin, pageH - 30);
     doc.text('Page ' + pageNum, pageW - margin, pageH - 30, { align: 'right' });
     doc.setDrawColor(...C.light);
     doc.line(margin, pageH - 40, pageW - margin, pageH - 40);
@@ -126,7 +126,7 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   cy += 16;
   doc.setFontSize(9);
   doc.setTextColor(...C.muted);
-  doc.text('Prepared by: CostSegPro  |  Automated RCNLD Cost Segregation Analysis  |  costsegplanning@gmail.com', margin + 16, cy);
+  doc.text('Prepared by: CostSegNow  |  Automated RCNLD Cost Segregation Analysis  |  costsegplanning@gmail.com', margin + 16, cy);
 
   // Hero savings — stacked layout
   var noYear1Benefit = r.year1TaxSavings <= 0;
@@ -195,9 +195,9 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   const features = [formData.isShortTermRental && "Short-Term Rental", formData.isFurnished && "Furnished", formData.hasPool && "Pool", formData.hasHotTub && "Hot Tub", formData.hasFireplace && (formData.numFireplaces || 1) + " Fireplace(s)", formData.hasGameRoom && "Game Room", formData.hasDeck && "Deck", formData.recentlyRenovated && "Renovated"].filter(Boolean).join(', ') || 'None noted';
 
   var scopeTexts = [
-    'CostSegPro was engaged to perform a cost segregation analysis on the property located at ' + (address || 'the address provided') + '. The purpose of this analysis is to identify and reclassify building components into shorter-life asset categories under the Modified Accelerated Cost Recovery System (MACRS), thereby accelerating depreciation deductions available to the property owner.',
+    'CostSegNow was engaged to perform a cost segregation analysis on the property located at ' + (address || 'the address provided') + '. The purpose of this analysis is to identify and reclassify building components into shorter-life asset categories under the Modified Accelerated Cost Recovery System (MACRS), thereby accelerating depreciation deductions available to the property owner.',
     'The subject property is a ' + r.propertyType + (r.isSTR ? ' operated as a short-term rental' : '') + ' with a reported purchase price of ' + fmt(r.purchasePrice) + ' and a depreciable basis of ' + fmt(r.depreciableBasis) + ' after deducting ' + fmt(r.landValue) + ' for non-depreciable land value. Land value was determined using: ' + landSource + '.',
-    'The analysis was performed using CostSegPro\'s automated RCNLD (Replacement Cost New Less Depreciation) engine, which applies construction cost benchmarks from RSMeans, Marshall & Swift, and Craftsman cost data, calibrated against completed engineering-based cost segregation studies. Component quantities were estimated from property characteristics including ' + (formData.sqft ? parseInt(formData.sqft).toLocaleString() + ' SF of living area, ' : '') + (formData.yearBuilt ? 'a construction year of ' + formData.yearBuilt + ', ' : '') + 'a building grade of ' + (formData.buildingGrade || 'standard') + ', and the following features: ' + features + '.',
+    'The analysis was performed using CostSegNow\'s automated RCNLD (Replacement Cost New Less Depreciation) engine, which applies construction cost benchmarks from RSMeans, Marshall & Swift, and Craftsman cost data, calibrated against completed engineering-based cost segregation studies. Component quantities were estimated from property characteristics including ' + (formData.sqft ? parseInt(formData.sqft).toLocaleString() + ' SF of living area, ' : '') + (formData.yearBuilt ? 'a construction year of ' + formData.yearBuilt + ', ' : '') + 'a building grade of ' + (formData.buildingGrade || 'standard') + ', and the following features: ' + features + '.',
   ];
   scopeTexts.forEach(function(text) { y = bodyText(y, text, { size: 9, color: C.text }); y += 6; });
 
@@ -582,9 +582,9 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
 
   [
     'This report was prepared using the Replacement Cost New Less Depreciation (RCNLD) methodology and MACRS classification standards, which are recognized by the IRS as appropriate methods for cost segregation analysis.',
-    'The accuracy of this analysis is based on the property information provided by the owner. CostSegPro did not independently verify or audit this information and did not perform a physical site inspection. It is the owner\u2019s responsibility to ensure all inputs are correct and complete. The degree of accuracy of this report is directly dependent on the quality of information provided.',
+    'The accuracy of this analysis is based on the property information provided by the owner. CostSegNow did not independently verify or audit this information and did not perform a physical site inspection. It is the owner\u2019s responsibility to ensure all inputs are correct and complete. The degree of accuracy of this report is directly dependent on the quality of information provided.',
     'It is the responsibility of the property owner and their tax professional to determine the applicability of this report at the individual state level and to their specific tax situation.',
-    'CostSegPro is not a licensed CPA, tax attorney, or enrolled agent. This report does not constitute individualized tax, legal, or accounting advice. Property owners should consult with a qualified tax professional before taking any tax positions based on this analysis.',
+    'CostSegNow is not a licensed CPA, tax attorney, or enrolled agent. This report does not constitute individualized tax, legal, or accounting advice. Property owners should consult with a qualified tax professional before taking any tax positions based on this analysis.',
     'Circular 230 Notice: Any federal tax information provided herein is not intended or written to be used, and cannot be used, for the purpose of avoiding penalties under the Internal Revenue Code.',
   ].forEach(function(text) { y = bodyText(y, text, { size: 9.5, color: C.text }); y += 8; });
 
@@ -593,10 +593,10 @@ export function generatePDF(results, formData, unitCostDetail, depSchedule) {
   doc.line(margin, y, pageW - margin, y);
   y += 20;
   y = bodyText(y, 'Report generated on ' + today, { size: 9, color: C.muted });
-  y = bodyText(y, 'Prepared by CostSegPro  |  Automated RCNLD Cost Segregation Analysis', { size: 9, color: C.text, bold: true });
+  y = bodyText(y, 'Prepared by CostSegNow  |  Automated RCNLD Cost Segregation Analysis', { size: 9, color: C.text, bold: true });
   y = bodyText(y, 'costsegplanning@gmail.com  |  costseg-pro.vercel.app', { size: 9, color: C.primary });
   addFooter();
 
-  var filename = 'CostSegPro_' + (propertyName || 'Report').replace(/[^a-zA-Z0-9]/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
+  var filename = 'CostSegNow_' + (propertyName || 'Report').replace(/[^a-zA-Z0-9]/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
   doc.save(filename);
 }
