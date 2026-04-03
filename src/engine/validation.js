@@ -1,4 +1,4 @@
-// Form validation for CostSegPro
+// Form validation for CostSegNow
 // Returns { valid: boolean, errors: { field: message } }
 
 function clean(v) {

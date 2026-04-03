@@ -1,6 +1,6 @@
-# CostSegPro — Calibration Data Reference
+# CostSegNow — Calibration Data Reference
 
-This folder contains real cost segregation studies used to calibrate and validate the CostSegPro engine. Claude Code should reference this file when working on engine logic, allocation profiles, unit costs, or renovation module features.
+This folder contains real cost segregation studies used to calibrate and validate the CostSegNow engine. Claude Code should reference this file when working on engine logic, allocation profiles, unit costs, or renovation module features.
 
 ## Folder Structure
 

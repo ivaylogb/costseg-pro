@@ -1,4 +1,4 @@
-# CostSegPro — Tax Engine Guardrails
+# CostSegNow — Tax Engine Guardrails
 
 These rules are **non-negotiable** for the cost segregation engine. Any code change that touches depreciation calculations, bonus rates, asset classification, or tax output must comply with every rule below. When in doubt, be conservative — understating a benefit is acceptable, overstating one is not.
 

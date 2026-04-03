@@ -1,4 +1,4 @@
-# CostSegPro — Cost Segregation Analysis Tool
+# CostSegNow — Cost Segregation Analysis Tool
 
 A self-service cost segregation analysis tool that generates professional, defensible depreciation acceleration estimates with downloadable PDF reports backed by unit-cost data.
 
