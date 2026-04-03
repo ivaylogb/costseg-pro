@@ -3,19 +3,254 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CostSegPro — Free Cost Segregation Estimate</title>
-    <meta name="description" content="Get a free cost segregation estimate for your rental property in under 2 minutes. Accelerate depreciation and save thousands on taxes." />
+    <title>CostSegNow — Instant Cost Segregation Analysis for Rental Properties</title>
+    <meta name="description" content="Get a cost segregation analysis for your rental or commercial property in under 2 minutes. RCNLD methodology, MACRS depreciation schedules, and IRS-recognized framework. Reports from $199 — 93% less than traditional engineering studies." />
+    <meta name="keywords" content="cost segregation, cost segregation study, cost seg, depreciation, rental property tax savings, bonus depreciation, MACRS, accelerated depreciation, real estate tax strategy, IRS Form 3115, RCNLD, cost segregation report" />
+    <link rel="canonical" href="https://costsegnow.vercel.app/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CostSegNow — Instant Cost Segregation Analysis" />
+    <meta property="og:description" content="Cost segregation analysis in under 2 minutes. RCNLD methodology, MACRS schedules, IRS-recognized framework. $199 vs. $5,000+ for traditional studies." />
+    <meta property="og:url" content="https://costsegnow.vercel.app/" />
+    <meta property="og:site_name" content="CostSegNow" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CostSegNow — Instant Cost Segregation Analysis" />
+    <meta name="twitter:description" content="Cost segregation analysis in under 2 minutes. $199 vs. $5,000+ for traditional studies. RCNLD methodology, MACRS depreciation schedules." />
+
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+      /* Hide pre-rendered content once React app mounts */
+      .seo-prerender { padding: 40px 20px; max-width: 800px; margin: 0 auto; line-height: 1.7; color: #333; }
+      .seo-prerender h1 { font-size: 28px; margin-bottom: 12px; }
+      .seo-prerender h2 { font-size: 22px; margin: 32px 0 12px; }
+      .seo-prerender h3 { font-size: 18px; margin: 24px 0 8px; }
+      .seo-prerender p { margin-bottom: 12px; }
+      #root:not(:empty) ~ .seo-prerender { display: none; }
     </style>
+
+    <!-- JSON-LD: Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "CostSegNow",
+      "url": "https://costsegnow.vercel.app",
+      "description": "CostSegNow provides instant cost segregation analyses for rental and commercial properties using IRS-recognized RCNLD methodology. Reports start at $199.",
+      "foundingDate": "2025",
+      "areaServed": "US",
+      "knowsAbout": [
+        "Cost Segregation",
+        "MACRS Depreciation",
+        "Bonus Depreciation",
+        "IRS Form 3115",
+        "RCNLD Methodology",
+        "Real Estate Tax Planning",
+        "Accelerated Depreciation"
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD: SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "CostSegNow",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web",
+      "url": "https://costsegnow.vercel.app",
+      "description": "Automated cost segregation analysis tool for rental and commercial properties. Uses RCNLD methodology calibrated against real engineering studies to classify building components into IRS MACRS asset categories (5-year, 7-year, 15-year, and 27.5/39-year property).",
+      "offers": {
+        "@type": "Offer",
+        "price": "199.00",
+        "priceCurrency": "USD",
+        "description": "CPA-Ready Cost Segregation Analysis Report with component detail tables, NPV analysis, year-by-year depreciation schedule, and IRS methodology references"
+      },
+      "featureList": [
+        "RCNLD methodology calibrated against real engineering studies",
+        "MACRS asset class categorization (5-yr, 7-yr, 15-yr, 27.5/39-yr)",
+        "Year-by-year depreciation schedule",
+        "Bonus depreciation analysis including OBBBA 100% restoration",
+        "IRS Form 3115 catch-up deduction calculations",
+        "Component-level detail tables",
+        "NPV analysis of tax savings",
+        "1031 exchange support",
+        "Supports residential, multifamily, apartment, office, retail, restaurant, industrial, and hotel properties"
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD: FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is cost segregation?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Cost segregation is a tax strategy that reclassifies components of a building from long-life property (27.5 or 39 years) to shorter-life categories (5, 7, or 15 years). This accelerates your depreciation deductions, reducing your taxable income in the early years of ownership. Common reclassified components include flooring, cabinetry, appliances, lighting, landscaping, parking lots, and specialty plumbing."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much does a cost segregation study cost?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Traditional engineering-based cost segregation studies cost $5,000 to $15,000 and take 4 to 8 weeks. CostSegNow generates cost segregation analyses using the same IRS-recognized RCNLD methodology for $199, delivered instantly. Our reports include component detail tables, MACRS depreciation schedules, and IRS methodology references."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What properties qualify for cost segregation?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Any depreciable property used for business or investment purposes qualifies, including single-family rentals, multifamily properties, apartment complexes, office buildings, retail spaces, restaurants, hotels, and industrial properties. The property cannot be your primary residence. Properties with a depreciable basis as low as $200,000 can benefit."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I still do cost segregation on a property I already own?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. You can file a catch-up deduction using IRS Form 3115 (Change in Accounting Method). This allows you to claim all missed accelerated depreciation from prior years as a single lump-sum deduction on your current tax return, known as a Section 481(a) adjustment. You do not need to amend prior-year returns."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the current bonus depreciation rate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The One Big Beautiful Bill Act (OBBBA), signed July 4, 2025, permanently restored 100% bonus depreciation for qualified property acquired and placed in service after January 19, 2025. For properties placed in service earlier: 2024 gets 60%, 2023 gets 80%, and 2017-2022 got 100% under the original TCJA provisions."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is CostSegNow a formal cost segregation study?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "CostSegNow generates cost segregation analyses using IRS-recognized RCNLD (Replacement Cost New Less Depreciation) methodology, calibrated against real engineering-based studies. Reports include detailed asset breakdowns, MACRS depreciation schedules, and tax authority references. Many property owners and CPAs find our reports sufficient for tax planning and filing, especially for residential properties under $1 million."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How accurate is CostSegNow compared to a full engineering study?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "CostSegNow estimates typically fall within 10 to 15 percent of a full engineering study for residential properties. Our engine is calibrated against multiple real engineering cost segregation studies and uses RSMeans 2024 construction cost data."
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!--
+      Pre-rendered content for search engines and AI crawlers.
+      Hidden once the React app mounts into #root.
+      Mirrors key Landing page content so non-JS crawlers can index it.
+    -->
+    <div class="seo-prerender">
+      <header>
+        <h1>CostSegNow — Instant Cost Segregation Analysis for Rental Properties</h1>
+        <p>Cost segregation accelerates your depreciation deductions, putting thousands back in your pocket in year one. Get an instant analysis — no engineers, no site visits, no six-week wait. Reports start at $199, compared to $5,000–$15,000 for traditional engineering studies.</p>
+      </header>
+
+      <main>
+        <section>
+          <h2>Stop Overpaying Taxes on Your Rental Property</h2>
+          <p>When you buy a rental property, the IRS makes you depreciate the entire building over 27.5 or 39 years. But a significant portion of the purchase price — cabinets, flooring, landscaping, appliances, lighting, specialty electrical, and plumbing — qualifies for 5-year or 15-year accelerated depreciation under IRS MACRS asset class rules.</p>
+          <p>A cost segregation study reclassifies these building components into their correct shorter-life asset categories, front-loading your depreciation deductions and increasing your cash flow in the early years of ownership. The problem? Traditional engineering-based cost segregation studies cost $5,000 to $15,000 and take 4 to 8 weeks to complete.</p>
+          <p>CostSegNow changes that. Same RCNLD (Replacement Cost New Less Depreciation) methodology and IRS-accepted framework, delivered instantly at a fraction of the cost. Our analysis engine is calibrated against real engineering cost segregation studies to ensure accuracy.</p>
+        </section>
+
+        <section>
+          <h2>How CostSegNow Works</h2>
+          <p>Step 1: Describe your property. Enter your property type, purchase price, year built, building grade, and key features like flooring, appliances, and whether the property has a pool or special landscaping. Takes about 60 seconds.</p>
+          <p>Step 2: We run the analysis. Our engine allocates your purchase price across IRS MACRS asset classes using construction cost benchmarks (RSMeans 2024 data) and MACRS classification rules. This follows the RCNLD methodology recognized by the IRS Cost Segregation Audit Technique Guide.</p>
+          <p>Step 3: Get your results. You receive estimated tax savings, a full component breakdown showing 5-year, 7-year, 15-year, and 27.5/39-year property allocations, a depreciation comparison, and bonus depreciation analysis reflecting current law including the One Big Beautiful Bill Act.</p>
+        </section>
+
+        <section>
+          <h2>Property Types Supported</h2>
+          <p>CostSegNow supports cost segregation analysis for single-family rentals, multifamily properties (2-4 units), apartment complexes (5+ units), office buildings, retail and strip malls, restaurants, industrial and warehouse properties, and hotels and motels. Each property type uses calibrated allocation profiles based on real engineering study data.</p>
+        </section>
+
+        <section>
+          <h2>CostSegNow vs. Traditional Cost Segregation Studies</h2>
+          <p>Traditional engineering cost segregation study: $5,000 to $15,000 cost, 4-8 week timeline, requires a site visit, requires hiring an engineering firm, often not cost-effective for properties under $1 million.</p>
+          <p>CostSegNow: $199 per report, 2-minute timeline, no site visit required, no engineering firm needed, works for properties of any size including those under $1 million.</p>
+          <p>Both approaches use the same underlying methodology: identifying building components that qualify for accelerated depreciation under IRS rules and reclassifying them from 27.5-year or 39-year property into 5-year, 7-year, or 15-year MACRS asset categories.</p>
+        </section>
+
+        <section>
+          <h2>Bonus Depreciation Under Current Tax Law (Updated March 2026)</h2>
+          <p>The One Big Beautiful Bill Act (OBBBA), signed into law on July 4, 2025, permanently restored 100% bonus depreciation for qualified property acquired and placed in service after January 19, 2025. This is the most significant change to cost segregation benefits since the Tax Cuts and Jobs Act of 2017.</p>
+          <p>Current bonus depreciation rates: 2017 through 2022: 100% (under original TCJA). 2023: 80%. 2024: 60%. January 1 through January 19, 2025: 40%. After January 19, 2025: 100% permanently under OBBBA.</p>
+          <p>For property owners who purchased before 2025, a look-back cost segregation study combined with IRS Form 3115 (Change in Accounting Method) allows you to claim all missed accelerated depreciation as a single lump-sum Section 481(a) adjustment on your current tax return.</p>
+        </section>
+
+        <section>
+          <h2>Who Uses CostSegNow</h2>
+          <p>Rental property owners: Own a single-family rental, duplex, or small multifamily? Cost segregation is not just for large commercial buildings. Properties with a depreciable basis as low as $200,000 can benefit significantly.</p>
+          <p>Portfolio investors: Run cost segregation on every acquisition to maximize first-year deductions across your portfolio. Stack savings across multiple properties.</p>
+          <p>CPAs and tax advisors: Give your clients a fast, affordable cost segregation option. Use CostSegNow as a screening tool to identify which properties warrant a full engineering study.</p>
+        </section>
+
+        <section>
+          <h2>Frequently Asked Questions About Cost Segregation</h2>
+
+          <h3>What is cost segregation?</h3>
+          <p>Cost segregation is a tax strategy that reclassifies components of a building from long-life property (27.5 or 39 years) to shorter-life categories (5, 7, or 15 years). This accelerates your depreciation deductions, reducing your taxable income in the early years of ownership. Common reclassified components include flooring, cabinetry, appliances, lighting fixtures, landscaping, parking lots, and specialty plumbing and electrical systems.</p>
+
+          <h3>How much does a cost segregation study cost?</h3>
+          <p>Traditional engineering-based cost segregation studies typically cost $5,000 to $15,000 depending on property size and complexity, and take 4 to 8 weeks. DIY and software-based options range from $199 (CostSegNow) to $1,295 for commercial properties. CostSegNow is the most affordable option at $199 per analysis, using IRS-recognized RCNLD methodology calibrated against real engineering studies.</p>
+
+          <h3>What properties qualify for cost segregation?</h3>
+          <p>Any depreciable property used for business or investment purposes qualifies for cost segregation. This includes single-family rentals, duplexes, triplexes, fourplexes, apartment complexes, office buildings, retail spaces, strip malls, restaurants, hotels and motels, and industrial and warehouse properties. The property cannot be your primary residence. New construction and existing properties both qualify.</p>
+
+          <h3>Can I do cost segregation on a property I already own?</h3>
+          <p>Yes. You can file a catch-up deduction using IRS Form 3115 (Change in Accounting Method). This lets you claim all missed accelerated depreciation from prior years as a single lump-sum deduction on your current tax return. This is called a Section 481(a) adjustment. You do not need to amend prior-year returns.</p>
+
+          <h3>What is the current bonus depreciation rate in 2025 and 2026?</h3>
+          <p>The One Big Beautiful Bill Act (OBBBA), signed July 4, 2025, permanently restored 100% bonus depreciation for qualified property acquired and placed in service after January 19, 2025. This means 5-year, 7-year, and 15-year property identified in a cost segregation study can be fully deducted in the year the property is placed in service. For properties placed in service in 2024, the bonus rate was 60%. For 2023, it was 80%.</p>
+
+          <h3>How accurate is CostSegNow?</h3>
+          <p>CostSegNow estimates typically fall within 10 to 15 percent of a full engineering study for residential properties. Our engine is calibrated against multiple real engineering cost segregation studies and uses RSMeans 2024 construction cost data.</p>
+
+          <h3>Will a CostSegNow report hold up in an IRS audit?</h3>
+          <p>CostSegNow generates reports using IRS-recognized RCNLD methodology with detailed component breakdowns, MACRS classifications, and tax authority references. For properties under $1 million, many CPAs find our component breakdown sufficient for filing. For larger properties, our report is an excellent planning tool to determine if a full engineering study is warranted.</p>
+        </section>
+
+        <section>
+          <h2>Real Example: $590,000 Rental Property in Encinitas, CA</h2>
+          <p>Without cost segregation: Standard 27.5-year straight-line depreciation yields $20,545 per year in depreciation, resulting in approximately $7,602 in Year 1 tax savings.</p>
+          <p>With CostSegNow analysis: $214,701 in 5-year personal property identified (38% of depreciable basis). With 100% bonus depreciation, Year 1 deduction increases to $227,442, producing approximately $79,453 in additional Year 1 tax savings.</p>
+        </section>
+      </main>
+
+      <footer>
+        <p>&copy; 2026 CostSegNow. This content does not constitute tax, legal, or accounting advice. Consult your CPA or tax advisor for filing guidance.</p>
+        <p>Last updated: March 2026</p>
+      </footer>
+    </div>
   </body>
 </html>

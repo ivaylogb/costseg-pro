@@ -41,7 +41,7 @@ export default function Landing() {
         <div className="csp-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#1A1917' }}>
             <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg, #1A7F5A, #145F44)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: 'white' }}>CS</div>
-            <div style={{ fontWeight: 700, fontSize: 17, letterSpacing: '-0.03em' }}>CostSeg<span style={{ color: '#1A7F5A' }}>Pro</span></div>
+            <div style={{ fontWeight: 700, fontSize: 17, letterSpacing: '-0.03em' }}>CostSeg<span style={{ color: '#1A7F5A' }}>Now</span></div>
           </a>
           <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
             <a className="csp-nav-link-text" href="#how" style={{ textDecoration: 'none', color: '#5C5A54', fontSize: 14, fontWeight: 500 }}>How It Works</a>
@@ -93,10 +93,10 @@ export default function Landing() {
               <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 38, letterSpacing: '-0.02em', lineHeight: 1.15, marginBottom: 20, fontWeight: 400 }}>You're depreciating your property too slowly</h2>
               <p style={{ color: '#5C5A54', fontSize: 16, lineHeight: 1.7 }}>When you buy a rental property, the IRS makes you depreciate the entire building over 27.5 or 39 years. But a significant portion — cabinets, flooring, landscaping, appliances, lighting — qualifies for 5 or 15-year accelerated depreciation.</p>
               <p style={{ color: '#5C5A54', fontSize: 16, lineHeight: 1.7, marginTop: 16 }}>A cost segregation study reclassifies these components, front-loading your deductions. The problem? Traditional studies cost $5,000–$15,000 and take weeks.</p>
-              <p style={{ color: '#5C5A54', fontSize: 16, lineHeight: 1.7, marginTop: 16 }}><strong style={{ color: '#1A1917' }}>CostSegPro changes that.</strong> Same RCNLD methodology and IRS-accepted framework, delivered instantly at a fraction of the cost.</p>
+              <p style={{ color: '#5C5A54', fontSize: 16, lineHeight: 1.7, marginTop: 16 }}><strong style={{ color: '#1A1917' }}>CostSegNow changes that.</strong> Same RCNLD methodology and IRS-accepted framework, delivered instantly at a fraction of the cost.</p>
             </div>
             <div style={{ padding: 32, borderRadius: 16, border: '1px solid #E4E2DD', background: '#FAFAF8' }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>⚡ Traditional Study vs. CostSegPro</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>⚡ Traditional Study vs. CostSegNow</h3>
               {[['Cost', '$5,000–$15,000', '$199'], ['Timeline', '4–8 weeks', '2 minutes'], ['Site visit required', 'Yes', 'No'], ['Engineering firm needed', 'Yes', 'No'], ['Works under $1M', 'Rarely', 'Always']].map(([label, old, nw], i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 4 ? '1px solid #EDEBE7' : 'none', fontSize: 14 }}>
                   <span style={{ color: '#5C5A54' }}>{label}</span>
@@ -201,12 +201,19 @@ export default function Landing() {
 
       {/* FOOTER */}
       <footer style={{ padding: '40px 0', borderTop: '1px solid #EDEBE7', color: '#8A877F', fontSize: 13 }}>
-        <div className="csp-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div>&copy; 2026 CostSegPro. Not tax advice — consult your CPA.</div>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <a href="#" style={{ color: '#5C5A54', textDecoration: 'none' }}>Privacy</a>
-            <a href="#" style={{ color: '#5C5A54', textDecoration: 'none' }}>Terms</a>
-            <a href="mailto:hello@costsegpro.com" style={{ color: '#5C5A54', textDecoration: 'none' }}>Contact</a>
+        <div className="csp-container">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
+            <div>&copy; 2026 CostSegNow. Not tax advice — consult your CPA.</div>
+            <div style={{ display: 'flex', gap: 24 }}>
+              <a href="#" style={{ color: '#5C5A54', textDecoration: 'none' }}>Privacy</a>
+              <a href="#" style={{ color: '#5C5A54', textDecoration: 'none' }}>Terms</a>
+              <a href="mailto:hello@costsegnow.com" style={{ color: '#5C5A54', textDecoration: 'none' }}>Contact</a>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', paddingTop: 16, borderTop: '1px solid #EDEBE7' }}>
+            <a href="/learn/what-is-cost-segregation" style={{ color: '#5C5A54', textDecoration: 'none', fontSize: 12 }}>What Is Cost Segregation?</a>
+            <a href="/learn/cost-segregation-rental-property" style={{ color: '#5C5A54', textDecoration: 'none', fontSize: 12 }}>Cost Seg for Rental Properties</a>
+            <a href="/learn/cost-segregation-study-cost" style={{ color: '#5C5A54', textDecoration: 'none', fontSize: 12 }}>How Much Does a Study Cost?</a>
           </div>
         </div>
       </footer>
@@ -218,10 +225,10 @@ function FaqSection() {
   const [openIndex, setOpenIndex] = useState(0);
   const faqs = [
     ['What is cost segregation?', 'Cost segregation is a tax strategy that reclassifies components of a building from long-life property (27.5 or 39 years) to shorter-life categories (5, 7, or 15 years). This accelerates your depreciation deductions, reducing your taxable income in the early years of ownership.'],
-    ['Is this a formal cost segregation study?', "CostSegPro generates cost segregation analyses using IRS-recognized RCNLD methodology, calibrated against real engineering-based studies. Our reports include detailed asset breakdowns, MACRS depreciation schedules, and tax authority references. Many property owners and CPAs find our reports sufficient for tax planning and filing, especially for residential properties."],
+    ['Is this a formal cost segregation study?', "CostSegNow generates cost segregation analyses using IRS-recognized RCNLD methodology, calibrated against real engineering-based studies. Our reports include detailed asset breakdowns, MACRS depreciation schedules, and tax authority references. Many property owners and CPAs find our reports sufficient for tax planning and filing, especially for residential properties."],
     ['What properties qualify?', 'Any depreciable property — residential rentals, commercial buildings, multifamily, retail, industrial, restaurants, and hotels. The property must be used for business or investment purposes (not your primary residence).'],
     ['I already own the property — is it too late?', 'Not at all. You can file a "catch-up" deduction using IRS Form 3115 (Change in Accounting Method). This lets you claim all missed accelerated depreciation in a single year — no need to amend prior returns.'],
-    ['What about bonus depreciation phasing down?', 'Bonus depreciation was 100% for 2020–2022 and is phasing down: 80% (2023), 60% (2024), 40% (2025), 20% (2026), 0% (2027). Even without it, cost segregation still accelerates deductions over 5 and 15-year recovery periods.'],
+    ['What about bonus depreciation in 2025 and 2026?', 'Great news: the One Big Beautiful Bill Act (OBBBA), signed July 4, 2025, permanently restored 100% bonus depreciation for qualified property acquired and placed in service after January 19, 2025. For earlier years: 2024 was 60%, 2023 was 80%, and 2017–2022 was 100%. Even without bonus depreciation, cost segregation still accelerates deductions over 5 and 15-year recovery periods.'],
     ['How accurate is the estimate?', 'Our estimates typically fall within 10–15% of a full engineering study for residential properties. The main difference is a full study includes a physical site inspection and component-by-component costing.'],
     ['Will this hold up in an IRS audit?', 'Our estimate is a planning tool and may need supplementation for audit purposes. For properties under $1M, many CPAs find our component breakdown sufficient. For larger properties, use our estimate to determine if a full study is justified.'],
   ];
