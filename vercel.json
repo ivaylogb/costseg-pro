@@ -4,7 +4,9 @@
   "rewrites": [
     { "source": "/learn/what-is-cost-segregation", "destination": "/learn/what-is-cost-segregation.html" },
     { "source": "/learn/cost-segregation-rental-property", "destination": "/learn/cost-segregation-rental-property.html" },
-    { "source": "/learn/cost-segregation-study-cost", "destination": "/learn/cost-segregation-study-cost.html" }
+    { "source": "/learn/cost-segregation-study-cost", "destination": "/learn/cost-segregation-study-cost.html" },
+    { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/privacy", "destination": "/privacy.html" }
   ],
   "headers": [
     {

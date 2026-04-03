@@ -205,8 +205,8 @@ export default function Landing() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
             <div>&copy; 2026 CostSegNow. Not tax advice — consult your CPA.</div>
             <div style={{ display: 'flex', gap: 24 }}>
-              <a href="#" style={{ color: '#5C5A54', textDecoration: 'none' }}>Privacy</a>
-              <a href="#" style={{ color: '#5C5A54', textDecoration: 'none' }}>Terms</a>
+              <a href="/privacy" style={{ color: '#5C5A54', textDecoration: 'none' }}>Privacy</a>
+              <a href="/terms" style={{ color: '#5C5A54', textDecoration: 'none' }}>Terms</a>
               <a href="mailto:costsegplanning@gmail.com" style={{ color: '#5C5A54', textDecoration: 'none' }}>Contact</a>
             </div>
           </div>
